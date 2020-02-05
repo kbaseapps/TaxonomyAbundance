@@ -1,0 +1,116 @@
+{
+  "ver" : "",
+  "authors" : ["tgu2"],
+  "contact" : "http://kbase.us/contact-us/",
+  "visible" : true,
+  "categories" : ["active","util"],
+  "widgets": {
+    "input": "kbaseNarrativeMethodInput",
+    "output" : "no-display"
+  },
+  "parameters" : [
+    {
+      "id" : "amplicon_matrix_ref",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "text",
+      "text_options" : {
+        "valid_ws_types" : ["KBaseMatrices.AmpliconMatrix"]
+      }
+    },
+    {
+      "id" : "attri_mapping_ref",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "text",
+      "text_options" : {
+        "valid_ws_types" : ["KBaseExperiments.AttributeMapping"]
+      }
+    },
+    {
+      "id": "threshold",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [ "0.2" ],
+      "field_type": "text",
+      "text_options": {
+        "validate_as": "float",
+        "min_float" : 0.0,
+        "max_float" : 1.0
+      }
+    },{
+            "id" : "taxonomy_level",
+            "optional" : true,
+            "advanced" : false,
+            "allow_multiple" : false,
+            "default_values" : [],
+            "field_type" : "text"
+        },{
+            "id" : "grouping_label",
+            "optional" : true,
+            "advanced" : false,
+            "allow_multiple" : false,
+            "default_values" : [],
+            "field_type" : "text"
+        }
+  ],
+  "behavior" : {
+    "service-mapping" : {
+      "url" : "",
+      "name" : "TaxonomyAbundance",
+      "method" : "run_TaxonomyAbundance",
+      "input_mapping" : [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        },
+        {
+          "input_parameter" : "amplicon_matrix_ref",
+          "target_property" : "amplicon_matrix_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter" : "attri_mapping_ref",
+          "target_property" : "attri_mapping_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter" : "threshold",
+          "target_property" : "threshold"
+        },
+        {
+          "input_parameter" : "taxonomy_level",
+          "target_property" : "taxonomy_level"
+        },
+        {
+          "input_parameter" : "grouping_label",
+          "target_property" : "grouping_label"
+        }
+      ],
+      "output_mapping" : [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "wsName"
+        },
+        {
+            "service_method_output_path": [0, "report_name"],
+            "target_property": "report_name"
+        },
+        {
+            "service_method_output_path": [0, "report_ref"],
+            "target_property": "report_ref"
+        },
+        {
+            "constant_value": "16",
+            "target_property": "report_window_line_height"
+        }
+      ]
+    }
+  },
+  "job_id_output_field": "docker"
+}
