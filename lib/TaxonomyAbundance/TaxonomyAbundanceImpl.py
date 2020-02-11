@@ -67,18 +67,12 @@ class TaxonomyAbundance:
         run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
             grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level)
 
-        report_params = {
-            'message': 'Report',
-            'file_links': '/scratch/bar_graph_0.png'
-        }
+
 
         report = KBaseReport(self.callback_url)
-        report_info = report.create({'report': {'objects_created': [],
+        report_info = report.create({'report': {'objects_created':[],
                                                 'text_message': params['parameter_1']},
                                                 'workspace_name': params['workspace_name']})
-
-        extended_output = report.create_extended_report(report_params)
-
         output = {
             'report_name': report_info['name'],
             'report_ref': report_info['ref'],
@@ -90,7 +84,7 @@ class TaxonomyAbundance:
             raise ValueError('Method run_TaxonomyAbundance return value ' +
                              'output is not type dict as required.')
         # return the results
-        return [extended_output]  # output
+        return [output]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
