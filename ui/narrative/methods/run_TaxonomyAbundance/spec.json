@@ -61,7 +61,12 @@
       "advanced" : false,
       "allow_multiple" : false,
       "default_values" : [],
-      "field_type" : "text"
+      "field_type" : "text",
+      "text_options": {
+        "validate_as": "int",
+        "min_int" : 1,
+        "max_int" : 6
+      }
     },
     {
       "id" : "grouping_label",
