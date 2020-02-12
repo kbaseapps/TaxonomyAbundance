@@ -33,7 +33,7 @@
     },
     {
       "id" : "attri_mapping_ref",
-      "optional" : false,
+      "optional" : true,
       "advanced" : false,
       "allow_multiple" : false,
       "default_values" : [ "" ],
@@ -45,9 +45,9 @@
     {
       "id": "threshold",
       "optional": false,
-      "advanced": true,
+      "advanced": false,
       "allow_multiple": false,
-      "default_values": [ "0.2" ],
+      "default_values": [ "0.005" ],
       "field_type": "text",
       "text_options": {
         "validate_as": "float",
