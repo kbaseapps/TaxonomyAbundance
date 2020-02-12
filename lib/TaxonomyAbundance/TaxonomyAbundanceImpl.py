@@ -2,6 +2,7 @@
 #BEGIN_HEADER
 import logging
 import os
+import uuid
 from TaxonomyAbundance.TAUtils import run
 
 from installed_clients.KBaseReportClient import KBaseReport
@@ -66,20 +67,30 @@ class TaxonomyAbundance:
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
         print(self.shared_folder)
-        run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
+        paths = run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
             grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level, callback_url=self.callback_url,
-            token=self.token)
-
-
-
-        report = KBaseReport(self.callback_url)
-        report_info = report.create({'report': {'objects_created':[],
-                                                'text_message': params['taxonomy_level']},
-                                                'workspace_name': params['workspace_name']})
+            token=self.token, scratch=self.shared_folder)
+        file_links = list()
+        for path in paths:
+            file_links.append({
+                'path': path,
+                'name': os.path.basename(path),
+                'label': "Bar chart",
+                'description': "CSV file with each column containing the assigned sample_id and sample "
+                               "name of each saved sample. Intended for uploading OTU data."
+            })
+        report_client = KBaseReport(self.callback_url)
+        report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
+        report_info = report_client.create_extended_report({
+            'file_links': file_links,
+            'report_object_name': report_name,
+            'workspace_name': params['workspace_name']
+        })
         output = {
-            'report_name': report_info['name'],
             'report_ref': report_info['ref'],
+            'report_name': report_info['name'],
         }
+
         #END run_TaxonomyAbundance
 
         # At some point might do deeper type checking...

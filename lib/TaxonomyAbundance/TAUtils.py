@@ -2,6 +2,8 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
+import os
+import uuid
 import random
 from installed_clients.WorkspaceClient import Workspace as Workspace
 from installed_clients.DataFIleUtilClient import DataFileUtil
@@ -11,13 +13,14 @@ class GraphData:
 
     # This class takes parameters: pandas.DataFrame datafile with taxonomy being bottom row, and another
     # pandas.DataFrame having range(len()) indexes and two columns for sample ID and category name
-    def __init__(self, df, mdf, otu_placement_in_matrix1='Columns'):
+    def __init__(self, df, mdf, otu_placement_in_matrix1='Columns', scratch=None):
         # Know layout of data matrix in file #
         self.otu_placement_in_matrix = otu_placement_in_matrix1
 
         # Set datafile.csv variable #
         self.df = df
         self.mdf = mdf
+        self.scratch = scratch
 
         # Number of rows and columns #
         self.number_of_cols = len(self.df.columns)
@@ -50,6 +53,9 @@ class GraphData:
         if mdf.empty != True:
             self.mdf_categories = self.compute_mdf_categories()
         self.metadata_grouping = []
+
+        #IMG Path
+        self.img_paths = []
 
     def append_taxonomy(self, tax_dict={}):
         pass
@@ -227,9 +233,22 @@ class GraphData:
         plt.title('Level: '+str(level))
         plt.xlabel('Samples')
         fig = plt.gcf()
-        #fig.savefig('bar_graph_0.png')
+
+        output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        os.mkdir(output_dir)
+
+        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
+        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
+
+        fig.savefig(bar_graph_path0)
+        self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
+        fig = plt.gcf()
+
+        fig.savefig(bar_graph_path1)
+        self.img_paths.append(bar_graph_path1)
         plt.show()
+
 
     def graph_all(self, level, legend_font_size, cutoff):
         bars = range(len(self.sample_sums))
@@ -320,13 +339,14 @@ def get_mdf(attributeMappingId, category_name, callback_url, token):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, token):
+def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, token, scratch):
     df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, callback_url=callback_url, token=token)
     if len(grouping_label) > 0:
         mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
-        g1 = GraphData(df=df, mdf=mdf)
+        g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
     else:
-        g1 = GraphData(df=df,mdf=pd.DataFrame())
+        g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch)
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
+    return g1.img_paths
 
 ############################################# End of my code ###################################################
