@@ -5,6 +5,7 @@ import os
 from TaxonomyAbundance.TAUtils import run
 
 from installed_clients.KBaseReportClient import KBaseReport
+
 #END_HEADER
 
 
@@ -54,11 +55,17 @@ class TaxonomyAbundance:
         #BEGIN run_TaxonomyAbundance
 
         amplicon_matrix_ref = params.get('amplicon_matrix_ref')
+        test_row_attri_ref = params.get('test_row_attri_ref')
+        attri_mapping_ref = params.get('attri_mapping_ref')
+        threshold = params.get('threshold')
+        taxonomy_level = params.get('taxonomy_level')
+        grouping_label = params.get('grouping_label')
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
         print(self.shared_folder)
-        run(csv_filepath=csv_fp, xls_filepath=xls_fp)
+        run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
+            grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level)
 
 
 
