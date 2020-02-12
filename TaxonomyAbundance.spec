@@ -10,6 +10,7 @@ module TaxonomyAbundance {
 
     typedef structure {
         string amplicon_matrix_ref;
+        test_row_attri_ref
         string attri_mapping_ref;
         string taxonmy_level;
         float threshold;
