@@ -232,7 +232,6 @@ class GraphData:
         plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=25)
         plt.title('Level: '+str(level))
         plt.xlabel('Samples')
-        fig = plt.gcf()
 
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         os.mkdir(output_dir)
@@ -240,12 +239,13 @@ class GraphData:
         bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
         bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
+        fig = plt.gcf()
+        fig.set_size_inches(24, 12)
         fig.savefig(bar_graph_path0)
         self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
         fig = plt.gcf()
-
-        fig.savefig(bar_graph_path1)
+        fig.savefig(bar_graph_path1, bbox_inches='tight')
         self.img_paths.append(bar_graph_path1)
         plt.show()
 
@@ -256,11 +256,22 @@ class GraphData:
         for x, y in self.the_dict.items():
             plt.bar(bars, y, label=(str(self.percent_arr[i])+'% '+ x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')), color=("#%06x" % random.randint(0, 0xFFFFFF)))
             i += 1
+        output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        os.mkdir(output_dir)
+        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
+        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
         plt.title('Level: '+str(level))
         plt.xlabel("Samples")
         plt.xticks(bars, self.samples, rotation=25)
+        fig = plt.gcf()
+        fig.set_size_inches(24, 12)
+        fig.savefig(bar_graph_path0)
+        self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
+        fig = plt.gcf()
+        fig.savefig(bar_graph_path1, bbox_inches='tight')
+        self.img_paths.append(bar_graph_path1)
         plt.show()
 
     def graph_this(self, level=1, legend_font_size=8, cutoff=-1.0, peek='all', category_field_name=''):
