@@ -225,6 +225,8 @@ class GraphData:
         plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=25)
         plt.title('Level: '+str(level))
         plt.xlabel('Samples')
+        fig = plt.gcf()
+        fig.savefig('/scratch/bar_graph_0.png')
         plt.legend(loc='center right', prop={'size': legend_font_size})
         plt.show()
 
