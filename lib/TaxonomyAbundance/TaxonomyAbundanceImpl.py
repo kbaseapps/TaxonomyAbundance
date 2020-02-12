@@ -36,6 +36,7 @@ class TaxonomyAbundance:
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
+        self.token = os.environ['KB_AUTH_TOKEN']
         self.shared_folder = config['scratch']
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
@@ -65,7 +66,8 @@ class TaxonomyAbundance:
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
         print(self.shared_folder)
         run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
-            grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level, url=self.callback_url)
+            grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level, url=self.callback_url,
+            token=self.token)
 
 
 
