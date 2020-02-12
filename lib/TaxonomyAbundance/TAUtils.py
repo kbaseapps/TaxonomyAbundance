@@ -259,10 +259,10 @@ class GraphData:
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
-def get_df(amp_permanent_id, test_row_attributes_permanent_id):
+def get_df(amp_permanent_id, test_row_attributes_permanent_id, url):
     # Get Amplicon Matrix Data then make Pandas.DataFrame(), also get taxonomy data and add it to df, then transpose and return
     # Amplicon data
-    ws = Workspace(config[‘workspace-url’])
+    ws = Workspace(url)
     obj = ws.get_objects2({'objects' : [{'ref' : amp_permanent_id}]})
     amp_data = obj['data'][0]['data']
 
@@ -286,10 +286,10 @@ def get_df(amp_permanent_id, test_row_attributes_permanent_id):
     Tdf = df.T
     return Tdf
 
-def get_mdf(attributeMappingId, category_name):
+def get_mdf(attributeMappingId, category_name, url):
     # Metadata: make range(len()) index matrix with ID and Category columns
     # Get object
-    ws = Workspace(config[‘workspace-url’])
+    ws = Workspace(url)
     obj = ws.get_objects2({'objects' : [{'ref' : attributeMappingId}]})
     meta_dict = obj['data'][0]['data']['instances']
     attr_l = obj['data'][0]['data']['attributes']
@@ -313,10 +313,10 @@ def get_mdf(attributeMappingId, category_name):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level):
-    df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id)
+def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, url):
+    df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, url=url)
     if len(grouping_label) > 0:
-        mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label)
+        mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, url=url)
         g1 = GraphData(df=df, mdf=mdf)
     else:
         g1 = GraphData(df=df,mdf=pd.DataFrame())
