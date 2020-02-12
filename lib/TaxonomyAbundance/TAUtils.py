@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import random
 from installed_clients.WorkspaceClient import Workspace as Workspace
+from installed_clients.DataFIleUtilClient import DataFileUtil
 
 # GraphData
 class GraphData:
@@ -226,7 +227,7 @@ class GraphData:
         plt.title('Level: '+str(level))
         plt.xlabel('Samples')
         fig = plt.gcf()
-        fig.savefig('/scratch/bar_graph_0.png')
+        #fig.savefig('bar_graph_0.png')
         plt.legend(loc='center right', prop={'size': legend_font_size})
         plt.show()
 
@@ -261,11 +262,12 @@ class GraphData:
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
-def get_df(amp_permanent_id, test_row_attributes_permanent_id, url, token):
+def get_df(amp_permanent_id, test_row_attributes_permanent_id, callback_url, token):
     # Get Amplicon Matrix Data then make Pandas.DataFrame(), also get taxonomy data and add it to df, then transpose and return
     # Amplicon data
-    ws = Workspace(url, token=token)
-    obj = ws.get_objects2({'objects' : [{'ref' : amp_permanent_id}]})
+    # ws = Workspace(url, token=token)
+    dfu = DataFileUtil(callback_url)
+    obj = dfu.get_objects({'object_refs' : [amp_permanent_id]})
     amp_data = obj['data'][0]['data']
 
     row_ids = amp_data['data']['row_ids']
@@ -279,7 +281,8 @@ def get_df(amp_permanent_id, test_row_attributes_permanent_id, url, token):
         df.iloc[i,:-1] = values[i]
 
     # Get object
-    obj = ws.get_objects2({'objects' : [{'ref' : test_row_attributes_permanent_id}]})
+    # obj = ws.get_objects2({'objects' : [{'ref' : test_row_attributes_permanent_id}]})
+    obj = dfu.get_objects({'object_refs' : [test_row_attributes_permanent_id]})
     tax_dict = obj['data'][0]['data']['instances']
 
     # Add taxonomy data and transpose matrix
@@ -288,11 +291,13 @@ def get_df(amp_permanent_id, test_row_attributes_permanent_id, url, token):
     Tdf = df.T
     return Tdf
 
-def get_mdf(attributeMappingId, category_name, url, token):
+def get_mdf(attributeMappingId, category_name, callback_url, token):
     # Metadata: make range(len()) index matrix with ID and Category columns
     # Get object
-    ws = Workspace(url, token=token)
-    obj = ws.get_objects2({'objects' : [{'ref' : attributeMappingId}]})
+    # ws = Workspace(url, token=token)
+    # obj = ws.get_objects2({'objects' : [{'ref' : attributeMappingId}]})
+    dfu = DataFileUtil(callback_url)
+    obj = dfu.get_objects({'object_refs': [attributeMappingId]})
     meta_dict = obj['data'][0]['data']['instances']
     attr_l = obj['data'][0]['data']['attributes']
 
@@ -315,10 +320,10 @@ def get_mdf(attributeMappingId, category_name, url, token):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, url, token):
-    df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, url=url, token=token)
+def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, token):
+    df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, callback_url=callback_url, token=token)
     if len(grouping_label) > 0:
-        mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, url=url, token=token)
+        mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
         g1 = GraphData(df=df, mdf=mdf)
     else:
         g1 = GraphData(df=df,mdf=pd.DataFrame())

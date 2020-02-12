@@ -63,5 +63,10 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         #
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
-        ret = self.serviceImpl.run_TaxonomyAbundance(self.ctx, {'workspace_name': self.wsName,
-                                                             'parameter_1': 'Hello World!'})
+
+        ret = self.serviceImpl.run_TaxonomyAbundance(self.ctx, {'amplicon_matrix_ref': '37967/3/2',
+                                                             'test_row_attri_ref': '37967/2/1',
+                                                                'attri_mapping_ref': '37967/4/1',
+                                                                'threshold': 0.005,
+                                                                'taxonomy_level': 3,
+                                                                'grouping_label': 'Field name (informal classification)'})
