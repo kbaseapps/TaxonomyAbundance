@@ -76,15 +76,18 @@ class TaxonomyAbundance:
                 'path': path,
                 'name': os.path.basename(path),
                 'label': "Bar chart",
-                'description': "CSV file with each column containing the assigned sample_id and sample "
-                               "name of each saved sample. Intended for uploading OTU data."
+                'description': "A bar graph without the legend, and another bar graph with the legend."
             })
         report_client = KBaseReport(self.callback_url)
         report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
         report_info = report_client.create_extended_report({
             'file_links': file_links,
             'report_object_name': report_name,
-            'workspace_name': params['workspace_name']
+            'workspace_name': params['workspace_name'],
+            'direct_html': "<html>"
+                            "<img src="+paths[0]+" alt='graph'>"
+                            "<img src="+paths[1]+" alt='graph'>"
+                           "</html>"
         })
         output = {
             'report_ref': report_info['ref'],
