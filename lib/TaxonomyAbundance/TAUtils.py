@@ -240,7 +240,7 @@ class GraphData:
         bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
         fig = plt.gcf()
-        fig.set_size_inches(24, 12)
+        fig.set_size_inches(12, 10)
         fig.savefig(bar_graph_path0)
         self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})

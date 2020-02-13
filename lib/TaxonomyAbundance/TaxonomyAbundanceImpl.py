@@ -85,8 +85,8 @@ class TaxonomyAbundance:
             'report_object_name': report_name,
             'workspace_name': params['workspace_name'],
             'direct_html': "<html>"
-                            "<img src="+paths[0]+" alt='graph'>"
-                            "<img src="+paths[1]+" alt='graph'>"
+                            "<img src="+paths[0]+" alt='graph without legend'>"
+                            #"<img src="+paths[1]+" alt='graph with legend'>"
                            "</html>"
         })
         output = {
