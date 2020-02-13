@@ -13,14 +13,16 @@ class GraphData:
 
     # This class takes parameters: pandas.DataFrame datafile with taxonomy being bottom row, and another
     # pandas.DataFrame having range(len()) indexes and two columns for sample ID and category name
-    def __init__(self, df, mdf, otu_placement_in_matrix1='Columns', scratch=None):
+    def __init__(self, df, mdf, otu_placement_in_matrix1='Columns', scratch=None, callback_url=None):
         # Know layout of data matrix in file #
         self.otu_placement_in_matrix = otu_placement_in_matrix1
 
         # Set datafile.csv variable #
         self.df = df
         self.mdf = mdf
+        # kbase client stuff
         self.scratch = scratch
+        self.dfu = DataFileUtil(callback_url)
 
         # Number of rows and columns #
         self.number_of_cols = len(self.df.columns)
@@ -238,21 +240,31 @@ class GraphData:
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         os.mkdir(output_dir)
 
+        html_links = []
+        read_file_path = output_dir
+        html_folder = os.path.join(read_file_path, 'html')
+        os.mkdir(html_folder)
+        shock = self.dfu.file_to_shock({'file_path': html_folder,
+                                        'make_handle': 0,
+                                        'pack': 'zip'})
+        html_links.append({'shock_id': shock['shock_id'],
+                           'name': 'index.html',
+                           'label': 'html files',
+                           'description': "desc"})
+
         bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
         bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
         # HTML_REPORT file path
-        html_report_path = os.path.join(output_dir, 'html_report.html')
-        self.html_paths.append(html_report_path)
+        self.html_paths.append(html_links)
         # HTML_REPORT string
         html_str = "<html>" \
                    "<h3>Graph</h3>" \
                    "<img src=" + bar_graph_path0 + " alt='graph without legend'>" \
                    "<img src=" + bar_graph_path1 + " alt='graph without legend'>" \
                    "</html>"
-        f = open(html_report_path, 'w+')
-        f.write(html_str)
-        f.close()
+        with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
+            index_file.write(html_str)
 
         fig = plt.gcf()
         fig.set_size_inches(24, 12)
@@ -372,7 +384,7 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
             mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
             g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
     except:
-        g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch)
+        g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch, callback_url=callback_url)
         grouping_label = ""
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return {

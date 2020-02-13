@@ -82,10 +82,10 @@ class TaxonomyAbundance:
         report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
         report_info = report_client.create_extended_report({
             'direct_html_link_index': 0,
+            'file_links': file_links,
             'html_links': img_paths_and_html_paths_dict['html_paths'],
             'report_object_name': report_name,
-            'workspace_name': params['workspace_name'],
-            'file_links': file_links
+            'workspace_name': params['workspace_name']
         })
         output = {
             'report_ref': report_info['ref'],
