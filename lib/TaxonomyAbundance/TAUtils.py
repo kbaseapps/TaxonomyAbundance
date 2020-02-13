@@ -240,14 +240,13 @@ class GraphData:
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         os.mkdir(output_dir)
 
-        html_links = []
         read_file_path = output_dir
         html_folder = os.path.join(read_file_path, 'html')
         os.mkdir(html_folder)
         shock = self.dfu.file_to_shock({'file_path': html_folder,
                                         'make_handle': 0,
                                         'pack': 'zip'})
-        html_links.append({'shock_id': shock['shock_id'],
+        self.html_paths.append({'shock_id': shock['shock_id'],
                            'name': 'index.html',
                            'label': 'html files',
                            'description': "desc"})
@@ -255,8 +254,6 @@ class GraphData:
         bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
         bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
-        # HTML_REPORT file path
-        self.html_paths.append(html_links)
         # HTML_REPORT string
         html_str = "<html>" \
                    "<h3>Graph</h3>" \
