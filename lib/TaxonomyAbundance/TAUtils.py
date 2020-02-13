@@ -352,10 +352,11 @@ def get_mdf(attributeMappingId, category_name, callback_url, token):
 
 def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, token, scratch):
     df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, callback_url=callback_url, token=token)
-    if len(grouping_label) > 0:
-        mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
-        g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
-    else:
+    try:
+        if len(grouping_label) > 0:
+            mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
+            g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
+    except:
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch)
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return g1.img_paths
