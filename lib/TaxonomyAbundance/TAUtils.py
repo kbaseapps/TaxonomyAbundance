@@ -57,7 +57,7 @@ class GraphData:
         # IMG Path
         self.img_paths = []
         # HTML Path
-        self.html_path = ''
+        self.html_paths = []
 
     def append_taxonomy(self, tax_dict={}):
         pass
@@ -243,7 +243,7 @@ class GraphData:
 
         # HTML_REPORT file path
         html_report_path = os.path.join(output_dir, 'html_report.html')
-        self.html_path = html_report_path
+        self.html_paths.append(html_report_path)
         # HTML_REPORT string
         html_str = "<html>" \
                    "<h3>Graph</h3>" \
@@ -377,6 +377,6 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return {
         'img_paths': g1.img_paths,
-        'html_path': g1.html_path
+        'html_paths': g1.html_paths
     }
 ############################################# End of my code ###################################################
