@@ -81,14 +81,14 @@ class TaxonomyAbundance:
         report_client = KBaseReport(self.callback_url)
         report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
         report_info = report_client.create_extended_report({
-            'file_links': file_links,
+            'direct_html': "<html>"
+                           "<h3>" + paths[0] + "</h3>"
+                            "<img src=" + paths[0] + " alt='graph without legend'>"
+                            "<img src=" + paths[1] + " alt='graph with legend'>"
+                            "</html>",
             'report_object_name': report_name,
             'workspace_name': params['workspace_name'],
-            'direct_html': "<html>"
-                           "<h1>"+paths[0]+"</h1>"
-                            "<img src="+paths[0]+" alt='graph without legend'>"
-                            #"<img src="+paths[1]+" alt='graph with legend'>"
-                           "</html>"
+            'file_links': file_links
         })
         output = {
             'report_ref': report_info['ref'],
