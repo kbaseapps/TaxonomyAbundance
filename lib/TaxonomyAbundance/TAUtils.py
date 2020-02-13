@@ -358,6 +358,7 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
             g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
     except:
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch)
+        grouping_label = ""
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return g1.img_paths
 
