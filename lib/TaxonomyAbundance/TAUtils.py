@@ -54,8 +54,10 @@ class GraphData:
             self.mdf_categories = self.compute_mdf_categories()
         self.metadata_grouping = []
 
-        #IMG Path
+        # IMG Path
         self.img_paths = []
+        # HTML Path
+        self.html_path = ''
 
     def append_taxonomy(self, tax_dict={}):
         pass
@@ -239,6 +241,19 @@ class GraphData:
         bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
         bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
+        # HTML_REPORT file path
+        html_report_path = os.path.join(output_dir, 'html_report.html')
+        self.html_path = html_report_path
+        # HTML_REPORT string
+        html_str = "<html>" \
+                   "<h3>Graph</h3>" \
+                   "<img src=" + bar_graph_path0 + " alt='graph without legend'>" \
+                   "<img src=" + bar_graph_path1 + " alt='graph without legend'>" \
+                   "</html>"
+        f = open(html_report_path, 'w+')
+        f.write(html_str)
+        f.close()
+
         fig = plt.gcf()
         fig.set_size_inches(24, 12)
         fig.savefig(bar_graph_path0)
@@ -360,6 +375,8 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch)
         grouping_label = ""
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
-    return g1.img_paths
-
+    return {
+        'img_paths': g1.img_paths,
+        'html_path': g1.html_path
+    }
 ############################################# End of my code ###################################################
