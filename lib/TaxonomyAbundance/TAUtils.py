@@ -208,6 +208,7 @@ class GraphData:
         return grp_dict
 
     def graph_by_group(self, level, legend_font_size, cutoff, category_field_name):
+        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
         grp_dict = self.make_grp_dict(category_field_name)
         ord_l = []
         x_tick_grp_str_l = []
@@ -234,7 +235,7 @@ class GraphData:
             plt.bar(pos_list_to_plot_samples, np.array(y)[ord_l], color=rand_color, width=0.9, label=(str(np.array(self.percent_arr[i])[ord_l])+'% ' + x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')))
             i += 1
         plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=25)
-        plt.title('Level: '+str(level))
+        plt.title('Level: '+ taxonomy_levels[level])
         plt.xlabel('Samples')
 
         # set up directory in scratch
@@ -277,12 +278,13 @@ class GraphData:
 
 
     def graph_all(self, level, legend_font_size, cutoff):
+        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
         bars = range(len(self.sample_sums))
         i = 0
         for x, y in self.the_dict.items():
             plt.bar(bars, y, label=(str(self.percent_arr[i])+'% '+ x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')), color=("#%06x" % random.randint(0, 0xFFFFFF)))
             i += 1
-        plt.title('Level: ' + str(level))
+        plt.title('Level: ' + taxonomy_levels[level])
         plt.xlabel("Samples")
         plt.xticks(bars, self.samples, rotation=25)
 
