@@ -256,7 +256,7 @@ class GraphData:
             index_file.write(html_str)
 
         fig = plt.gcf()
-        fig.set_size_inches(8, 6)
+        fig.set_size_inches(12, 6)
         fig.savefig(bar_graph_path0, bbox_inches='tight')  # savefig without legend
         self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
@@ -282,23 +282,47 @@ class GraphData:
         for x, y in self.the_dict.items():
             plt.bar(bars, y, label=(str(self.percent_arr[i])+'% '+ x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')), color=("#%06x" % random.randint(0, 0xFFFFFF)))
             i += 1
-        output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        os.mkdir(output_dir)
-        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
-        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
-
-        plt.title('Level: '+str(level))
+        plt.title('Level: ' + str(level))
         plt.xlabel("Samples")
         plt.xticks(bars, self.samples, rotation=25)
+
+        # set up directory in scratch
+        output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        os.mkdir(output_dir)
+        # set up directory for html folder
+        read_file_path = output_dir
+        html_folder = os.path.join(read_file_path, 'html')
+        os.mkdir(html_folder)
+        bar_graph_path0 = os.path.join(html_folder, 'bar_graph_0.png')
+        bar_graph_path1 = os.path.join(html_folder, 'bar_graph_1.png')
+        # HTML_REPORT string
+        html_str = "<html>" \
+                   "<h3>Graph</h3>" \
+                   "<img src='bar_graph_0.png' alt='graph without legend'>" \
+                   "<img src='bar_graph_1.png' alt='graph with legend'>" \
+                   "</html>"
+        with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
+            index_file.write(html_str)
+
         fig = plt.gcf()
-        fig.set_size_inches(24, 12)
-        fig.savefig(bar_graph_path0)
+        fig.set_size_inches(12, 6)
+        fig.savefig(bar_graph_path0, bbox_inches='tight')  # savefig without legend
         self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
         fig = plt.gcf()
-        fig.savefig(bar_graph_path1, bbox_inches='tight')
+        fig.savefig(bar_graph_path1, bbox_inches='tight')  # savefig with legend
         self.img_paths.append(bar_graph_path1)
         plt.show()
+
+        # have needed files saved to folder before shock
+        shock = self.dfu.file_to_shock({'file_path': html_folder,
+                                        'make_handle': 0,
+                                        'pack': 'zip'})
+        # list that goes to 'html_links'
+        self.html_paths.append({'shock_id': shock['shock_id'],
+                                'name': 'index.html',
+                                'label': 'html files',
+                                'description': "desc"})
 
     def graph_this(self, level=1, legend_font_size=8, cutoff=-1.0, peek='all', category_field_name=''):
         """ MAIN GRAPHING METHOD """
