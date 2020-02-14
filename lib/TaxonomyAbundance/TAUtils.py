@@ -256,16 +256,16 @@ class GraphData:
             index_file.write(html_str)
 
         fig = plt.gcf()
-        fig.set_size_inches(24, 12)
-        fig.savefig(bar_graph_path0)
+        fig.set_size_inches(8, 6)
+        fig.savefig(bar_graph_path0, bbox_inches='tight')  # savefig without legend
         self.img_paths.append(bar_graph_path0)
         plt.legend(loc='center right', prop={'size': legend_font_size})
         fig = plt.gcf()
-        fig.savefig(bar_graph_path1, bbox_inches='tight')
+        fig.savefig(bar_graph_path1, bbox_inches='tight')  # savefig with legend
         self.img_paths.append(bar_graph_path1)
         plt.show()
 
-        # idk what file_to_shock does but it was in the example
+        # have needed files saved to folder before shock
         shock = self.dfu.file_to_shock({'file_path': html_folder,
                                         'make_handle': 0,
                                         'pack': 'zip'})
