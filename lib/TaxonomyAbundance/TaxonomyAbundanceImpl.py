@@ -99,7 +99,7 @@ class TaxonomyAbundance:
             raise ValueError('Method run_TaxonomyAbundance return value ' +
                              'output is not type dict as required.')
         # return the results
-        return [output]
+        return [report_info]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

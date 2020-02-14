@@ -237,15 +237,18 @@ class GraphData:
         plt.title('Level: '+str(level))
         plt.xlabel('Samples')
 
+        # set up directory in scratch
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         os.mkdir(output_dir)
-
+        # set up directory for html folder
         read_file_path = output_dir
         html_folder = os.path.join(read_file_path, 'html')
         os.mkdir(html_folder)
+        # idk what file_to_shock does but it was in the example
         shock = self.dfu.file_to_shock({'file_path': html_folder,
                                         'make_handle': 0,
                                         'pack': 'zip'})
+        # list that goes to 'html_links'
         self.html_paths.append({'shock_id': shock['shock_id'],
                            'name': 'index.html',
                            'label': 'html files',
