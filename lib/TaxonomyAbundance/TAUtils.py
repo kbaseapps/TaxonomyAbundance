@@ -249,8 +249,8 @@ class GraphData:
         # HTML_REPORT string
         html_str = "<html>" \
                    "<h3>Graph</h3>" \
-                   "<img src="'bar_graph_0.png'" alt='graph without legend'>" \
-                   "<img src="'bar_graph_1.png'" alt='graph with legend'>" \
+                   "<img src='bar_graph_0.png' alt='graph without legend'>" \
+                   "<img src='bar_graph_1.png' alt='graph with legend'>" \
                    "</html>"
         with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
             index_file.write(html_str)
