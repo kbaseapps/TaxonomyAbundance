@@ -70,6 +70,7 @@ class TaxonomyAbundance:
         img_paths_and_html_paths_dict = run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
             grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level, callback_url=self.callback_url,
             token=self.token, scratch=self.shared_folder)
+        print('***************************\n',img_paths_and_html_paths_dict,'\n*****************************')
         file_links = list()
         for path in img_paths_and_html_paths_dict['img_paths']:
             file_links.append({

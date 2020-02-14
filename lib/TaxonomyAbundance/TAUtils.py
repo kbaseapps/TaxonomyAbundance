@@ -244,6 +244,17 @@ class GraphData:
         read_file_path = output_dir
         html_folder = os.path.join(read_file_path, 'html')
         os.mkdir(html_folder)
+        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
+        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
+        # HTML_REPORT string
+        html_str = "<html>" \
+                   "<h3>Graph</h3>" \
+                   "<img src=" + bar_graph_path0 + " alt='graph without legend'>" \
+                   "<img src=" + bar_graph_path1 + " alt='graph without legend'>" \
+                   "</html>"
+        with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
+            index_file.write(html_str)
+
         # idk what file_to_shock does but it was in the example
         shock = self.dfu.file_to_shock({'file_path': html_folder,
                                         'make_handle': 0,
@@ -253,18 +264,9 @@ class GraphData:
                            'name': 'index.html',
                            'label': 'html files',
                            'description': "desc"})
+        print('***************\n',self.html_paths,'\n*************')
 
-        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
-        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
 
-        # HTML_REPORT string
-        html_str = "<html>" \
-                   "<h3>Graph</h3>" \
-                   "<img src=" + bar_graph_path0 + " alt='graph without legend'>" \
-                   "<img src=" + bar_graph_path1 + " alt='graph without legend'>" \
-                   "</html>"
-        with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
-            index_file.write(html_str)
 
         fig = plt.gcf()
         fig.set_size_inches(24, 12)
@@ -379,13 +381,16 @@ def get_mdf(attributeMappingId, category_name, callback_url, token):
 
 def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, token, scratch):
     df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, callback_url=callback_url, token=token)
+    print(grouping_label)
     try:
         if len(grouping_label) > 0:
             mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
-            g1 = GraphData(df=df, mdf=mdf, scratch=scratch)
-    except:
+            g1 = GraphData(df=df, mdf=mdf, scratch=scratch, callback_url=callback_url)
+            print('****** int the try *******')
+    except TypeError:
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch, callback_url=callback_url)
         grouping_label = ""
+        print('****** in the except ******')
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return {
         'img_paths': g1.img_paths,
