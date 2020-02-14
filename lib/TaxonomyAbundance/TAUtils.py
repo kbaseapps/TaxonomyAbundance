@@ -255,19 +255,6 @@ class GraphData:
         with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
             index_file.write(html_str)
 
-        # idk what file_to_shock does but it was in the example
-        shock = self.dfu.file_to_shock({'file_path': html_folder,
-                                        'make_handle': 0,
-                                        'pack': 'zip'})
-        # list that goes to 'html_links'
-        self.html_paths.append({'shock_id': shock['shock_id'],
-                           'name': 'index.html',
-                           'label': 'html files',
-                           'description': "desc"})
-        print('***************\n',self.html_paths,'\n*************')
-
-
-
         fig = plt.gcf()
         fig.set_size_inches(24, 12)
         fig.savefig(bar_graph_path0)
@@ -277,6 +264,16 @@ class GraphData:
         fig.savefig(bar_graph_path1, bbox_inches='tight')
         self.img_paths.append(bar_graph_path1)
         plt.show()
+
+        # idk what file_to_shock does but it was in the example
+        shock = self.dfu.file_to_shock({'file_path': html_folder,
+                                        'make_handle': 0,
+                                        'pack': 'zip'})
+        # list that goes to 'html_links'
+        self.html_paths.append({'shock_id': shock['shock_id'],
+                           'name': 'index.html',
+                           'label': 'html files',
+                           'description': "desc"})
 
 
     def graph_all(self, level, legend_font_size, cutoff):
