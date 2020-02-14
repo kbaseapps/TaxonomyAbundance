@@ -244,13 +244,13 @@ class GraphData:
         read_file_path = output_dir
         html_folder = os.path.join(read_file_path, 'html')
         os.mkdir(html_folder)
-        bar_graph_path0 = os.path.join(output_dir, 'bar_graph_0.png')
-        bar_graph_path1 = os.path.join(output_dir, 'bar_graph_1.png')
+        bar_graph_path0 = os.path.join(html_folder, 'bar_graph_0.png')
+        bar_graph_path1 = os.path.join(html_folder, 'bar_graph_1.png')
         # HTML_REPORT string
         html_str = "<html>" \
                    "<h3>Graph</h3>" \
-                   "<img src=" + bar_graph_path0 + " alt='graph without legend'>" \
-                   "<img src=" + bar_graph_path1 + " alt='graph without legend'>" \
+                   "<img src="'bar_graph_0.png'" alt='graph without legend'>" \
+                   "<img src="'bar_graph_1.png'" alt='graph with legend'>" \
                    "</html>"
         with open(os.path.join(html_folder, "index.html"), 'w') as index_file:
             index_file.write(html_str)
