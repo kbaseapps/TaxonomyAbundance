@@ -1,10 +1,10 @@
 #
 # define display information
 #
-name: Method Name Here
+name: TaxonomyAbundance
 
 tooltip: |
-    Perform some kind of method
+    Creates a relative abundance bar chart showing taxonomic percentage, along with optional grouping based on metadata.
 
 screenshots: []
 
