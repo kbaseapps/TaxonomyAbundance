@@ -409,11 +409,9 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
         if len(grouping_label) > 0:
             mdf = get_mdf(attributeMappingId=attri_map_id, category_name=grouping_label, callback_url=callback_url, token=token)
             g1 = GraphData(df=df, mdf=mdf, scratch=scratch, callback_url=callback_url)
-            print('****** int the try *******')
     except TypeError:
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch, callback_url=callback_url)
         grouping_label = ""
-        print('****** in the except ******')
     g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return {
         'img_paths': g1.img_paths,
