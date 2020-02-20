@@ -234,7 +234,7 @@ class GraphData:
             rand_color = ("#%06x" % random.randint(0, 0xFFFFFF))
             plt.bar(pos_list_to_plot_samples, np.array(y)[ord_l], color=rand_color, width=0.9, label=(x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')))
             i += 1
-        plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=25)
+        plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=90)
         plt.title('Level: '+ taxonomy_levels[level-1])
         plt.xlabel('Samples')
 
@@ -282,11 +282,11 @@ class GraphData:
         bars = range(len(self.sample_sums))
         i = 0
         for x, y in self.the_dict.items():
-            plt.bar(bars, y, label=(str(self.percent_arr[i])+'% '+ x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')), color=("#%06x" % random.randint(0, 0xFFFFFF)))
+            plt.bar(bars, y, label=(x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')), color=("#%06x" % random.randint(0, 0xFFFFFF)))
             i += 1
         plt.title('Level: ' + taxonomy_levels[level-1])
         plt.xlabel("Samples")
-        plt.xticks(bars, self.samples, rotation=25)
+        plt.xticks(bars, self.samples, rotation=90)
 
         # set up directory in scratch
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
