@@ -232,7 +232,7 @@ class GraphData:
         i = 0
         for x, y in self.the_dict.items():  # x = taxonomic_string, y = cumulative_percentage
             rand_color = ("#%06x" % random.randint(0, 0xFFFFFF))
-            plt.bar(pos_list_to_plot_samples, np.array(y)[ord_l], color=rand_color, width=0.9, label=(str(np.array(self.percent_arr[i])[ord_l])+'% ' + x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')))
+            plt.bar(pos_list_to_plot_samples, np.array(y)[ord_l], color=rand_color, width=0.9, label=(x + ('('+str(self.other_count)+') cutoff: '+str(cutoff) if x == 'Other' else '')))
             i += 1
         plt.xticks(range(-1, len(x_tick_grp_str_l)), x_tick_grp_str_l, rotation=25)
         plt.title('Level: '+ taxonomy_levels[level-1])
@@ -412,7 +412,7 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
     except TypeError:
         g1 = GraphData(df=df,mdf=pd.DataFrame(), scratch=scratch, callback_url=callback_url)
         grouping_label = ""
-    g1.graph_this(level=taxonomic_level, legend_font_size=12, cutoff=threshold, peek='all', category_field_name=grouping_label)
+    g1.graph_this(level=taxonomic_level, legend_font_size=8, cutoff=threshold, peek='all', category_field_name=grouping_label)
     return {
         'img_paths': g1.img_paths,
         'html_paths': g1.html_paths
