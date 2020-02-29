@@ -14,7 +14,7 @@ module TaxonomyAbundance {
         string attri_mapping_ref;
         float threshold;
         int taxonomy_level;
-        string grouping_label;
+        mapping<string, string> grouping_label;
     } TaxonomyAbundanceInput;
 
     /*
