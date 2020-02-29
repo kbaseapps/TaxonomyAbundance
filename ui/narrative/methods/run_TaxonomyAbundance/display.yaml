@@ -62,15 +62,20 @@ parameters :
         short-hint: |
             1-6
         long-hint: |
-            1:Domain, 2:Phylum, 3:Class, 4:Order, 5:Family, 6:Genus.
+            Taxonomic string will include chosen and below.
 
-    grouping_label:
+    meta_group:
         ui-name: |
             Metadata Grouping Column Name
         short-hint: |
             Name of the column in AttributeMapping metadata in which to group by
         long-hint: |
             Name of the column in AttributeMapping metadata in which to group by.
+
+parameter-groups :
+    grouping_label:
+        ui-name : Meta Group
+        short-hint :  Select an attribute to group by
 
 description : |
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar efficitur felis, quis tincidunt sem congue at. Vivamus ornare feugiat faucibus. Fusce tincidunt mattis nunc, nec varius purus convallis quis. Nulla facilisi. In at magna dolor. Suspendisse sit amet felis at arcu auctor dapibus vitae pharetra dui. Nam semper mi quis tortor fermentum mollis. Donec a arcu pharetra, rutrum dolor vitae, rutrum mauris. Donec ornare fringilla sagittis. Nam laoreet est in elementum malesuada. Vestibulum id mi eget urna hendrerit feugiat. Donec et ultrices nulla. Phasellus diam eros, dapibus at tempus nec, semper vel ante.</p>

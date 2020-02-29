@@ -61,21 +61,69 @@
       "advanced" : false,
       "allow_multiple" : false,
       "default_values" : [],
-      "field_type" : "text",
-      "text_options": {
-        "validate_as": "int",
-        "min_int" : 1,
-        "max_int" : 6
+      "field_type" : "dropdown",
+      "dropdown_options":
+      {
+        "options":
+        [
+          {
+              "display": "1: Domain",
+              "value": "1"
+          },
+          {
+              "display": "2: Phylum",
+              "value": "2"
+          },
+          {
+              "display": "3: Class",
+              "value": "3"
+          },
+          {
+              "display": "4: Order",
+              "value": "4"
+          },
+          {
+              "display": "5: Family",
+              "value": "5"
+          },
+          {
+              "display": "6: Genus",
+              "value": "6"
+          }
+        ]
       }
     },
     {
-      "id" : "grouping_label",
-      "optional" : true,
-      "advanced" : false,
-      "allow_multiple" : false,
-      "default_values" : "",
-      "field_type" : "text"
-        }
+      "id": "meta_group",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [ "" ],
+      "field_type": "textsubdata",
+      "textsubdata_options": {
+        "subdata_selection": {
+          "parameter_id": "attribute_mapping_obj_ref",
+          "subdata_included": ["attributes/[*]/attribute"],
+          "path_to_subdata": ["attributes"],
+          "selection_id": "attribute"
+        },
+        "multiselection": false,
+        "show_src_obj": false,
+        "allow_custom": false
+      }
+    }
+  ],
+  "parameter-groups": [
+    {
+      "id": "grouping_label",
+      "parameters": [
+        "meta_group"
+      ],
+      "optional": true,
+      "allow_multiple": false,
+      "with_border": false,
+      "advanced" : false
+    }
   ],
   "behavior" : {
     "service-mapping" : {
