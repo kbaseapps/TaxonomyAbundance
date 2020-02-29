@@ -68,27 +68,27 @@
         [
           {
               "display": "1: Domain",
-              "value": "1"
+              "value": 1
           },
           {
               "display": "2: Phylum",
-              "value": "2"
+              "value": 2
           },
           {
               "display": "3: Class",
-              "value": "3"
+              "value": 3
           },
           {
               "display": "4: Order",
-              "value": "4"
+              "value": 4
           },
           {
               "display": "5: Family",
-              "value": "5"
+              "value": 5
           },
           {
               "display": "6: Genus",
-              "value": "6"
+              "value": 6
           }
         ]
       }
