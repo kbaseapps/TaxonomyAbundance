@@ -63,6 +63,7 @@ class TaxonomyAbundance:
         threshold = params.get('threshold')
         taxonomy_level = params.get('taxonomy_level')
         grouping_label = params.get('grouping_label')
+        grouping_label = grouping_label['meta_group'][0]
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
