@@ -54,8 +54,9 @@ class GraphData:
             self.mdf_categories = self.compute_mdf_categories()
         self.metadata_grouping = []
 
-        # HTML Path
+        # Paths
         self.html_paths = []
+        self.img_paths = []
 
     def compute_mdf_categories(self):
         return list(self.mdf.columns)
@@ -230,9 +231,11 @@ class GraphData:
         # Save plotly_fig.html and return path
         plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
         plot(taxo_fig, filename=plotly_html_file_path)
+        self.img_paths.append(plotly_html_file_path)
         plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
         taxo_fig.update_layout(showlegend=False)
         plot(taxo_fig, filename=plotly_html_file_path)
+        self.img_paths.append(plotly_html_file_path)
 
         self._shock_and_set_paths(html_folder)
 
@@ -260,9 +263,11 @@ class GraphData:
         # Save plotly_fig.html and return path
         plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
         plot(taxo_fig, filename=plotly_html_file_path)
+        self.img_paths.append(plotly_html_file_path)
         plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
         taxo_fig.update_layout(showlegend=False)
         plot(taxo_fig, filename=plotly_html_file_path)
+        self.img_paths.append(plotly_html_file_path)
 
         self._shock_and_set_paths(html_folder)
 
@@ -294,7 +299,7 @@ class GraphData:
                                         'pack': 'zip'})
         # list that goes to 'html_links'
         self.html_paths.append({'shock_id': shock['shock_id'],
-                                'name': 'plotly_fig.html',
+                                'name': 'plotly_fig_without_legend.html',
                                 'label': 'html files',
                                 'description': "desc"})
 
@@ -412,5 +417,6 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
         grouping_label = ""
     g1.graph_this(level=int(taxonomic_level), cutoff=threshold, category_field_name=grouping_label)
     return {
+        'img_paths': g1.img_paths,
         'html_paths': g1.html_paths
     }
