@@ -222,7 +222,7 @@ class GraphData:
             plot_list.append(go.Bar(name=taxo_str, x=plot_x, y=plot_y, hovertext=taxo_str))
 
         taxo_fig = go.Figure(data=plot_list)
-        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level]), bargap=0.05,
+        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
                                xaxis_title='Samples', yaxis_title='Percentage')
         taxo_fig.update_xaxes(tickangle=-90)
         self._save_fig(taxo_fig)
@@ -243,7 +243,7 @@ class GraphData:
             plot_list.append(go.Bar(name=key, x=self.samples, y=val))
 
         taxo_fig = go.Figure(data=plot_list)
-        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level]), bargap=0.05,
+        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
                                xaxis_title='Samples', yaxis_title='Percentage')
         taxo_fig.update_xaxes(tickangle=-90)
         self._save_fig(taxo_fig)
