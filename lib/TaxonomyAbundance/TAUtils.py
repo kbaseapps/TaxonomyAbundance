@@ -225,7 +225,16 @@ class GraphData:
         taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
                                xaxis_title='Samples', yaxis_title='Percentage')
         taxo_fig.update_xaxes(tickangle=-90)
-        self._save_fig(taxo_fig)
+
+        html_folder = self._mk_dir()
+        # Save plotly_fig.html and return path
+        plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
+        plot(taxo_fig, filename=plotly_html_file_path)
+        plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
+        taxo_fig.update_layout(showlegend=False)
+        plot(taxo_fig, filename=plotly_html_file_path)
+
+        self._shock_and_set_paths(html_folder)
 
     def graph_all(self, level, cutoff):
         """
@@ -246,28 +255,39 @@ class GraphData:
         taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
                                xaxis_title='Samples', yaxis_title='Percentage')
         taxo_fig.update_xaxes(tickangle=-90)
-        self._save_fig(taxo_fig)
 
-    def _save_fig(self, fig):
+        html_folder = self._mk_dir()
+        # Save plotly_fig.html and return path
+        plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
+        plot(taxo_fig, filename=plotly_html_file_path)
+        plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
+        taxo_fig.update_layout(showlegend=False)
+        plot(taxo_fig, filename=plotly_html_file_path)
+
+        self._shock_and_set_paths(html_folder)
+
+    def _mk_dir(self):
         """
-        Makes a folder directory to save the plotly html figure. Then sets "self.html_paths" after calling
-        dfu.file_to_shock
-        :param fig:
-        :return:
+        Makes a folder directory to save the plotly html figures.
+        :return: html_folder_path
         """
-        logging.info('Saving figure')
+        logging.info('Making html directory')
         # set up directory in scratch
         output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         os.mkdir(output_dir)
         # set up directory for html folder
-        read_file_path = output_dir
-        html_folder = os.path.join(read_file_path, 'html')
+        html_folder = os.path.join(output_dir, 'html')
         os.mkdir(html_folder)
+        return html_folder
 
-        # Save plotly_fig.html and return path
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
-        plot(fig, filename=plotly_html_file_path)
-
+    def _shock_and_set_paths(self, html_folder):
+        """
+        Sets "self.html_paths" after calling dfu.file_to_shock
+        :param fig:
+        :param file_name:
+        :param html_folder:
+        :return:
+        """
         # have needed files saved to folder before shock
         shock = self.dfu.file_to_shock({'file_path': html_folder,
                                         'make_handle': 0,
