@@ -300,8 +300,12 @@ class GraphData:
         # list that goes to 'html_links'
         self.html_paths.append({'shock_id': shock['shock_id'],
                                 'name': 'plotly_fig_without_legend.html',
-                                'label': 'html files',
-                                'description': "desc"})
+                                'label': 'Barplot without legend',
+                                'description': "Barplot without legend"})
+        self.html_paths.append({'shock_id': shock['shock_id'],
+                                'name': 'plotly_fig.html',
+                                'label': 'Barplot with legend',
+                                'description': "Barplot with legend"})
 
     def graph_this(self, level=1, cutoff=-1.0, category_field_name=''):
         """
