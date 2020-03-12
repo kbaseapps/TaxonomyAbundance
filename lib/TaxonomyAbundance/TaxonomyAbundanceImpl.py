@@ -69,24 +69,15 @@ class TaxonomyAbundance:
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
-        img_paths_and_html_paths_dict = run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref, attri_map_id=attri_mapping_ref,
-            grouping_label=grouping_label, threshold=threshold, taxonomic_level=taxonomy_level, callback_url=self.callback_url,
-            token=self.token, scratch=self.shared_folder)
+        html_path = run(amp_id=amplicon_matrix_ref, row_attributes_id=test_row_attri_ref,
+                        attri_map_id=attri_mapping_ref, grouping_label=grouping_label, threshold=threshold,
+                        taxonomic_level=taxonomy_level, callback_url=self.callback_url, scratch=self.shared_folder)
 
-        file_links = list()
-        for path in img_paths_and_html_paths_dict['img_paths']:
-            file_links.append({
-                'path': path,
-                'name': os.path.basename(path),
-                'label': "Bar chart",
-                'description': "A bar graph without the legend, and another bar graph with the legend."
-            })
         report_client = KBaseReport(self.callback_url, token=self.token)
         report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
         report_info = report_client.create_extended_report({
             'direct_html_link_index': 0,
-            'file_links': file_links,
-            'html_links': img_paths_and_html_paths_dict['html_paths'],
+            'html_links': html_path['html_paths'],
             'report_object_name': report_name,
             'workspace_name': params['workspace_name']
         })

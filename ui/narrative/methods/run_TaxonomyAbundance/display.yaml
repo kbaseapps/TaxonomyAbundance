@@ -28,9 +28,9 @@ parameters :
         ui-name : |
             Amplicon Matrix
         short-hint : |
-            AmpliconMatrix
+            AmpliconMatrix with raw count data
         long-hint  : |
-            AmpliconMatrix.
+            AmpliconMatrix with raw count data
 
     test_row_attri_ref:
         ui-name: |

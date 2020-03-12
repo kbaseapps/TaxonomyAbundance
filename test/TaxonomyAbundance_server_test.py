@@ -69,5 +69,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                                                                 'attri_mapping_ref': '37967/4/1',
                                                                 'threshold': 0.005,
                                                                 'taxonomy_level': 3,
-                                                                'grouping_label': 'Field name (informal classification)',
+                                                                'grouping_label': {
+                                                                    'meta_group': ['Field name (informal classification)']
+                                                                },
                                                                 'workspace_name': self.wsName})
