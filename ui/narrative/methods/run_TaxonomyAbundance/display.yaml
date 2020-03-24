@@ -32,14 +32,6 @@ parameters :
         long-hint  : |
             AmpliconMatrix with raw count data
 
-    test_row_attri_ref:
-        ui-name: |
-            {AmpmpliconMatrix_name}_row_attributes
-        short-hint: |
-            AttributeMapping that correlates to the AmpliconMatrix
-        long-hint: |
-            AttributeMapping that correlates to the AmpliconMatrix. Contains taxonomy data.
-
     attri_mapping_ref:
         ui-name: |
             Metadata AttributeMapping

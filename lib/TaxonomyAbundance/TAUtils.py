@@ -324,12 +324,11 @@ class GraphData:
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
-def get_df(amp_permanent_id, test_row_attributes_permanent_id, dfu):
+def get_df(amp_permanent_id, dfu):
     """
     Get Amplicon Matrix Data then make Pandas.DataFrame(),
     also get taxonomy data and add it to df, then transpose and return
     :param amp_permanent_id:
-    :param test_row_attributes_permanent_id:
     :param dfu:
     :return:
     """
@@ -349,6 +348,7 @@ def get_df(amp_permanent_id, test_row_attributes_permanent_id, dfu):
         df.iloc[i, :-1] = values[i]
 
     # Get object
+    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref']
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
     tax_dict = obj['data'][0]['data']['instances']
 
@@ -391,11 +391,10 @@ def get_mdf(attribute_mapping_obj_ref, category_name, dfu):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, scratch):
+def run(amp_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, scratch):
     """
     First method that is ran. Makes instance of GraphData class. Determines whether to get metadata or not.
     :param amp_id:
-    :param row_attributes_id:
     :param attri_map_id:
     :param grouping_label:
     :param threshold:
@@ -403,12 +402,13 @@ def run(amp_id, row_attributes_id, attri_map_id, grouping_label, threshold, taxo
     :param callback_url:
     :param scratch:
     :return: {
-        'html': g1.html_paths
+        'img_paths': g1.img_paths,
+        'html_paths': g1.html_paths
         }
     """
     logging.info('run(grouping: {}, cutoff: {}, level: {})'.format(grouping_label, threshold, taxonomic_level))
     dfu = DataFileUtil(callback_url)
-    df = get_df(amp_permanent_id=amp_id, test_row_attributes_permanent_id=row_attributes_id, dfu=dfu)
+    df = get_df(amp_permanent_id=amp_id, dfu=dfu)
     try:
         if len(grouping_label) > 0:
             mdf = get_mdf(attribute_mapping_obj_ref=attri_map_id, category_name=grouping_label,

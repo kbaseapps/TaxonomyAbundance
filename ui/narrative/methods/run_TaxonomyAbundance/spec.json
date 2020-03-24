@@ -21,17 +21,6 @@
       }
     },
     {
-      "id" : "test_row_attri_ref",
-      "optional" : false,
-      "advanced" : false,
-      "allow_multiple" : false,
-      "default_values" : [ "" ],
-      "field_type" : "text",
-      "text_options" : {
-        "valid_ws_types" : ["KBaseExperiments.AttributeMapping"]
-      }
-    },
-    {
       "id" : "attri_mapping_ref",
       "optional" : true,
       "advanced" : false,
@@ -138,11 +127,6 @@
         {
           "input_parameter" : "amplicon_matrix_ref",
           "target_property" : "amplicon_matrix_ref",
-          "target_type_transform": "resolved-ref"
-        },
-        {
-          "input_parameter" : "test_row_attri_ref",
-          "target_property" : "test_row_attri_ref",
           "target_type_transform": "resolved-ref"
         },
         {
