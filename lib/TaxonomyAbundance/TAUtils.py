@@ -288,8 +288,6 @@ class GraphData:
     def _shock_and_set_paths(self, html_folder):
         """
         Sets "self.html_paths" after calling dfu.file_to_shock
-        :param fig:
-        :param file_name:
         :param html_folder:
         :return:
         """

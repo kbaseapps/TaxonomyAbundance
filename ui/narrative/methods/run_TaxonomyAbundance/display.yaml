@@ -1,7 +1,7 @@
 #
 # define display information
 #
-name: Taxonomy Abundance Barplot
+name: Generate Taxonomy Abundance Barplot
 
 tooltip: |
     Creates a relative abundance bar chart showing taxonomic percentage, along with optional grouping based on metadata.
@@ -55,6 +55,7 @@ parameters :
             1-6
         long-hint: |
             Taxonomic string will include chosen and below.
+            1)Domain 2)Phylum 3)Class 4)Order 5)Family 6)Genus
 
     meta_group:
         ui-name: |
@@ -62,7 +63,7 @@ parameters :
         short-hint: |
             Name of the column in AttributeMapping metadata in which to group by
         long-hint: |
-            Name of the column in AttributeMapping metadata in which to group by.
+            Name of the column in AttributeMapping metadata in which to group by
 
 parameter-groups :
     grouping_label:
@@ -71,3 +72,4 @@ parameter-groups :
 
 description : |
     <p>This method creates a Relative Abundance bar graph for taxonomic strings and groups based on metadata criteria</p>
+    <p>If the user chooses "3)Class" for the Taxonomic Level, the taxonomic strings will consist of the Domain, Phylum, and Class.</p>
