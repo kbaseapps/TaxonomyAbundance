@@ -4,7 +4,7 @@
 name: Generate Taxonomy Abundance Barplot
 
 tooltip: |
-    Creates a relative abundance bar chart showing taxonomic percentage, along with optional grouping based on metadata.
+    Creates a relative abundance bar chart for taxa at the specified taxonomic level, along with optional grouping of bars based on sample data.
 
 screenshots: []
 
@@ -38,15 +38,15 @@ parameters :
         short-hint: |
             AttributeMapping where metadata for grouping is stored.
         long-hint: |
-            This is optional, but required if Metadata Grouping Column Name is entered.
+            This is optional, but required if grouping samples by sample data.
 
     threshold:
         ui-name: |
             Cutoff
         short-hint: |
-            For 'Other' category. Enter a percentage in decimal form. Ex: 0.005 for 0.5%
+            The relative abundance threshold below which taxa will be lumped into the 'Other' category. 
         long-hint: |
-            All taxonomies with percentages(decimal form) below cutoff for all samples will be placed in 'Other'.
+            The relative abundance threshold below which taxa will be lumped into the 'Other' category.
 
     taxonomy_level:
         ui-name: |
@@ -54,16 +54,16 @@ parameters :
         short-hint: |
             1-6
         long-hint: |
-            Taxonomic string will include chosen and below.
+            Abundance of taxa will be summed and plotted at the specified taxonomic level:
             1)Domain 2)Phylum 3)Class 4)Order 5)Family 6)Genus
 
     meta_group:
         ui-name: |
             Metadata Grouping Column Name
         short-hint: |
-            Name of the column in AttributeMapping metadata in which to group by
+            Bars will be plotted grouped by sample data in specified column. 
         long-hint: |
-            Name of the column in AttributeMapping metadata in which to group by
+            Bars will be plotted grouped by sample data in specified column.
 
 parameter-groups :
     grouping_label:
@@ -71,5 +71,5 @@ parameter-groups :
         short-hint :  Select an attribute to group by
 
 description : |
-    <p>This method creates a Relative Abundance bar graph for taxonomic strings and groups based on metadata criteria</p>
+    <p>This method creates a relative abundance bar graph for taxa and groups based on metadata criteria</p>
     <p>If the user chooses "3)Class" for the Taxonomic Level, the taxonomic strings will consist of the Domain, Phylum, and Class.</p>
