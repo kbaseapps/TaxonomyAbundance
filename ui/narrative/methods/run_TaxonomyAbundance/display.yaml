@@ -72,11 +72,36 @@ parameter-groups :
 
 description : |
     <h3>Description: </h3>
-    <p>This method creates a relative abundance bar plot for taxa and groups based on metadata criteria. A 100% bar is created for each sample in the matrix, and taxa are represented by different colored blocks in the bars showing their abundance in percentage. The percentage is obtained by adding all OTU counts in a sample that share the same taxa and dividing by the total sample count. This will allow users to better visualize their data. Further information is provided in the points below.</p>
+
+    <p>This method creates a relative abundance bar plot for taxa and groups based on metadata criteria. A 100% bar is
+    created for each sample in the matrix, and taxa are represented by different colored blocks in the bars showing their
+    abundance in percentage. The percentage is obtained by adding all OTU counts in a sample that share the same taxa and
+    dividing by the total sample count. This will allow users to better visualize their data. Further information is provided
+    in the points below.</p>
+
     <p><b>Required:</b></p>
+
     <p>1)	AmpliconMatrix: This takes in an AmpliconMatrix object as input, expecting raw count data. </p>
-    <p>2)	Taxonomic Level: Each OTU is assigned a ‘taxonomic-string’ that is taken from their taxonomy information and subset based on the chosen taxonomic level. Ex: If the user chooses "3)Class" for the Taxonomic Level, the taxonomic strings will consist of the Domain, Phylum, and Class. If any of these levels are missing, ‘unclassified’ will be put in its place.</p>
-    <p>3)	Cutoff: When there are many different taxa, the bar plot will have many tiny blocks in the bars that might make it hard to see them all. This cutoff feature allows the user to specify a percentage that for any taxon that falls under it for each sample, it will be place in a category named ‘Other’. The default is 0.005 or 0.5%.</p>
+
+    <p>2)	Taxonomic Level: Each OTU is assigned a ‘taxonomic-string’ that is taken from their taxonomy information and
+    subset based on the chosen taxonomic level. Ex: If the user chooses "3)Class" for the Taxonomic Level, the taxonomic
+    strings will consist of the Domain, Phylum, and Class. If any of these levels are missing, ‘unclassified’ will be put
+    in its place.</p>
+
+    <p>3)	Cutoff: When there are many different taxa, the bar plot will have many tiny blocks in the bars that might
+    make it hard to see them all. This cutoff feature allows the user to specify a percentage that for any taxon that
+    falls under it for each sample, it will be place in a category named ‘Other’. The default is 0.005 or 0.5%.</p>
+
     <p><b>Optional:</b></p>
-    <p>4)	Metadata AttributeMapping & Meta Group: This allows the user to pick metadata to organize the bar plot. This puts samples that share the same meta group side by side with an extra space between the other meta groups. This allows the user to better compare similar samples from one another. The user just needs to select the Metadata object to use and select a field from that object to do the metadata grouping by.</p>
+
+    <p>4)	Metadata AttributeMapping & Meta Group: This allows the user to pick metadata to organize the bar plot. This
+    puts samples that share the same meta group side by side with an extra space between the other meta groups. This allows
+    the user to better compare similar samples from one another. The user just needs to select the Metadata object to use
+    and select a field from that object to do the metadata grouping by.</p>
+
     <p>Uses plotly version 4.5.2 for plotting.</p>
+
+    <p><b>Test Run Images:</b></p>
+
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/master/taxa_input.png" alt="Example Input" style="width:1000px;height:800px;">
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/master/taxa_results.png" alt="Example Results" style="width:1000px;height:800px;">
