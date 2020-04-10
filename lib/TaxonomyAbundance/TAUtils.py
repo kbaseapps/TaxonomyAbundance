@@ -79,7 +79,7 @@ class GraphData:
         """
         logging.info('Pushing into main dictionary for level: {}'.format(level))
         self.the_dict.clear()
-        for i in range(1, len(self.df.columns)):
+        for i in range(len(self.df.columns)):
             # d: p: c: o: f: g:
             col_num = i
             col_values_np_array = np.array(pd.to_numeric(self.df.iloc[:-1, i]))

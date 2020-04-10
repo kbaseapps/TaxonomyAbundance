@@ -103,5 +103,5 @@ description : |
 
     <p><b>Test Run Images:</b></p>
 
-    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/master/taxa_input.png" alt="Example Input" style="width:1000px;height:800px;">
-    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/master/taxa_results.png" alt="Example Results" style="width:1000px;height:800px;">
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/plotly/taxa_input.png" alt="Example Input" style="width:1000px;height:800px;">
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/plotly/taxa_results.png" alt="Example Results" style="width:1000px;height:800px;">
