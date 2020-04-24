@@ -1,12 +1,12 @@
 {
   "ver" : "",
-  "authors" : ["james_verasoto"],
+  "authors" : ["james_verasoto", "weise"],
   "contact" : "http://kbase.us/contact-us/",
   "visible" : true,
   "categories" : ["active","util"],
   "widgets": {
     "input": "kbaseNarrativeMethodInput",
-    "output" : "no-display"
+    "output": "no-display"
   },
   "parameters" : [
     {
@@ -18,17 +18,6 @@
       "field_type" : "text",
       "text_options" : {
         "valid_ws_types" : ["KBaseMatrices.AmpliconMatrix"]
-      }
-    },
-    {
-      "id" : "test_row_attri_ref",
-      "optional" : false,
-      "advanced" : false,
-      "allow_multiple" : false,
-      "default_values" : [ "" ],
-      "field_type" : "text",
-      "text_options" : {
-        "valid_ws_types" : ["KBaseExperiments.AttributeMapping"]
       }
     },
     {
@@ -138,11 +127,6 @@
         {
           "input_parameter" : "amplicon_matrix_ref",
           "target_property" : "amplicon_matrix_ref",
-          "target_type_transform": "resolved-ref"
-        },
-        {
-          "input_parameter" : "test_row_attri_ref",
-          "target_property" : "test_row_attri_ref",
           "target_type_transform": "resolved-ref"
         },
         {

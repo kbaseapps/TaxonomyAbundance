@@ -2,6 +2,7 @@
 import os
 import time
 import unittest
+import logging
 from configparser import ConfigParser
 
 from TaxonomyAbundance.TaxonomyAbundanceImpl import TaxonomyAbundance
@@ -15,6 +16,9 @@ class TaxonomyAbundanceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        logging.info('setUpClass')
+
         token = os.environ.get('KB_AUTH_TOKEN', None)
         config_file = os.environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
@@ -48,6 +52,9 @@ class TaxonomyAbundanceTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+
+        logging.info('tearDownClass')
+
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
@@ -64,10 +71,14 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
 
+        logging.info('test_your_method')
+
         ret = self.serviceImpl.run_TaxonomyAbundance(self.ctx, {'amplicon_matrix_ref': '37967/3/2',
-                                                                'test_row_attri_ref': '37967/2/1',
                                                                 'attri_mapping_ref': '37967/4/1',
                                                                 'threshold': 0.005,
                                                                 'taxonomy_level': 3,
-                                                                'grouping_label': 'Field name (informal classification)',
+                                                                'grouping_label': {
+                                                                    'meta_group': ['Field name (informal classification)']
+                                                                },
                                                                 'workspace_name': self.wsName})
+

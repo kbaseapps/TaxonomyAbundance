@@ -1,10 +1,10 @@
 #
 # define display information
 #
-name: Taxonomy Abundance Barplot
+name: Generate Taxonomy Abundance Barplot
 
 tooltip: |
-    Creates a relative abundance bar chart showing taxonomic percentage, along with optional grouping based on metadata.
+    Creates a relative abundance bar chart for taxa at the specified taxonomic level, along with optional grouping of bars based on sample data.
 
 screenshots: []
 
@@ -28,17 +28,9 @@ parameters :
         ui-name : |
             Amplicon Matrix
         short-hint : |
-            AmpliconMatrix
+            AmpliconMatrix with raw count data
         long-hint  : |
-            AmpliconMatrix.
-
-    test_row_attri_ref:
-        ui-name: |
-            {AmpmpliconMatrix_name}_row_attributes
-        short-hint: |
-            AttributeMapping that correlates to the AmpliconMatrix
-        long-hint: |
-            AttributeMapping that correlates to the AmpliconMatrix. Contains taxonomy data.
+            AmpliconMatrix with raw count data
 
     attri_mapping_ref:
         ui-name: |
@@ -46,15 +38,15 @@ parameters :
         short-hint: |
             AttributeMapping where metadata for grouping is stored.
         long-hint: |
-            This is optional, but required if Metadata Grouping Column Name is entered.
+            This is optional, but required if grouping samples by sample data.
 
     threshold:
         ui-name: |
             Cutoff
         short-hint: |
-            For 'Other' category. Enter a percentage in decimal form. Ex: 0.005 for 0.5%
+            The relative abundance threshold below which taxa will be lumped into the 'Other' category. 
         long-hint: |
-            All taxonomies with percentages(decimal form) below cutoff for all samples will be placed in 'Other'.
+            The relative abundance threshold below which taxa will be lumped into the 'Other' category.
 
     taxonomy_level:
         ui-name: |
@@ -62,15 +54,16 @@ parameters :
         short-hint: |
             1-6
         long-hint: |
-            Taxonomic string will include chosen and below.
+            Abundance of taxa will be summed and plotted at the specified taxonomic level:
+            1)Domain 2)Phylum 3)Class 4)Order 5)Family 6)Genus
 
     meta_group:
         ui-name: |
             Metadata Grouping Column Name
         short-hint: |
-            Name of the column in AttributeMapping metadata in which to group by
+            Bars will be plotted grouped by sample data in specified column. 
         long-hint: |
-            Name of the column in AttributeMapping metadata in which to group by.
+            Bars will be plotted grouped by sample data in specified column.
 
 parameter-groups :
     grouping_label:
@@ -78,4 +71,37 @@ parameter-groups :
         short-hint :  Select an attribute to group by
 
 description : |
-    <p>This method creates a Relative Abundance bar graph for taxonomic strings and groups based on metadata criteria</p>
+    <h3>Description: </h3>
+
+    <p>This method creates a relative abundance bar plot for taxa and groups based on metadata criteria. A 100% bar is
+    created for each sample in the matrix, and taxa are represented by different colored blocks in the bars showing their
+    abundance in percentage. The percentage is obtained by adding all OTU counts in a sample that share the same taxa and
+    dividing by the total sample count. This will allow users to better visualize their data. Further information is provided
+    in the points below.</p>
+
+    <p><b>Required:</b></p>
+
+    <p>1)	AmpliconMatrix: This takes in an AmpliconMatrix object as input, expecting raw count data. </p>
+
+    <p>2)	Taxonomic Level: Each OTU is assigned a ‘taxonomic-string’ that is taken from their taxonomy information and
+    subset based on the chosen taxonomic level. Ex: If the user chooses "3)Class" for the Taxonomic Level, the taxonomic
+    strings will consist of the Domain, Phylum, and Class. If any of these levels are missing, ‘unclassified’ will be put
+    in its place.</p>
+
+    <p>3)	Cutoff: When there are many different taxa, the bar plot will have many tiny blocks in the bars that might
+    make it hard to see them all. This cutoff feature allows the user to specify a percentage that for any taxon that
+    falls under it for each sample, it will be place in a category named ‘Other’. The default is 0.005 or 0.5%.</p>
+
+    <p><b>Optional:</b></p>
+
+    <p>4)	Metadata AttributeMapping & Meta Group: This allows the user to pick metadata to organize the bar plot. This
+    puts samples that share the same meta group side by side with an extra space between the other meta groups. This allows
+    the user to better compare similar samples from one another. The user just needs to select the Metadata object to use
+    and select a field from that object to do the metadata grouping by.</p>
+
+    <p>Uses plotly version 4.5.2 for plotting.</p>
+
+    <p><b>Test Run Images:</b></p>
+
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/plotly/taxa_input.png" alt="Example Input" style="width:1000px;height:800px;">
+    <img src="https://raw.githubusercontent.com/JamesVera-Soto/TaxonomyAbundance/plotly/taxa_results.png" alt="Example Results" style="width:1000px;height:800px;">

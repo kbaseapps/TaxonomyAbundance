@@ -7,9 +7,8 @@ MAINTAINER KBase Developer
 # installation scripts.
 
 # RUN apt-get update
-RUN pip install matplotlib
 RUN pip install pandas
-RUN pip install xlrd
+RUN pip install plotly==4.5.2
 
 
 # -----------------------------------------
