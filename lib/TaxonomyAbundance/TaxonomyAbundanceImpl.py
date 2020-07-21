@@ -7,6 +7,8 @@ from TaxonomyAbundance.TAUtils import run
 
 from installed_clients.KBaseReportClient import KBaseReport
 
+from .dprint import dprint
+
 #END_HEADER
 
 

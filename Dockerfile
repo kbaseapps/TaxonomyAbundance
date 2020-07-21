@@ -10,7 +10,7 @@ MAINTAINER KBase Developer
 RUN pip install pandas
 RUN pip install plotly==4.5.2
 
-
+ENV PYTHONUNBUFFERED=True
 # -----------------------------------------
 
 COPY ./ /kb/module

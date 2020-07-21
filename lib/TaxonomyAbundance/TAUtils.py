@@ -1,23 +1,28 @@
 from plotly.offline import plot
 import plotly.graph_objs as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly
 import pandas as pd
 import numpy as np
 import os
 import uuid
 import logging
-from installed_clients.WorkspaceClient import Workspace as Workspace
-from installed_clients.DataFIleUtilClient import DataFileUtil
+import itertools
 
+from installed_clients.WorkspaceClient import Workspace as Workspace
+from installed_clients.DataFileUtilClient import DataFileUtil
+
+from dprint import dprint
 
 # GraphData
 class GraphData:
 
     def __init__(self, df, mdf, scratch=None, dfu=None):
         """
-        This class takes parameters: pandas.DataFrame datafile with taxonomy being bottom row, and another
-        pandas.DataFrame having range(len()) indexes and two columns for sample ID and category name
-        :param df:
-        :param mdf:
+        :param df: pandas.DataFrame dataframe with taxonomy being bottom row
+        :param mdf: pandas.DataFrame having range(len()) indexes
+                    and two columns for sample ID and category name
         :param scratch:
         :param dfu:
         """
@@ -33,7 +38,7 @@ class GraphData:
         self.number_of_cols = len(self.df.columns)
         self.number_of_rows = len(self.df.index)
         # Sample list #
-        self.samples = list(self.df.index)
+        self.samples = list(self.df.index)[:-1]
         # Initialize dictionary #
         self.the_dict = {}
         # Metadata Dict #
@@ -52,6 +57,7 @@ class GraphData:
         # METADATA #
         if not mdf.empty:
             self.mdf_categories = self.compute_mdf_categories()
+            dprint('self.mdf', 'self.mdf_categories', run=locals()) # ?
         self.metadata_grouping = []
 
         # Paths
@@ -66,87 +72,40 @@ class GraphData:
         for sample in self.df.index:
             try:
                 row_sums.append(pd.to_numeric(self.df.loc[sample]).sum())
-            except ValueError:
+            except ValueError: # last row is taxonomies
                 return np.array(row_sums)
         return np.array(row_sums)
 
     def push_to_the_dict(self, level=1):
         """
-        The first part, if else statements, gets taxonomic string to use as dictionary key.
-        The last part, try except, pushes data into dictionary.
-        :param level:
+        Iter through columns of self.the_dict,
+        which consist of amplicon's AmpliconMatrix data and taxonomy.
+        Truncate taxonomy to `level`
+        and sum up all data for that amplicon
+
+        :param level: in {1, ..., 6} corresponding to {Domain, ..., Genus}
         :return:
         """
         logging.info('Pushing into main dictionary for level: {}'.format(level))
         self.the_dict.clear()
-        for i in range(len(self.df.columns)):
-            # d: p: c: o: f: g:
-            col_num = i
-            col_values_np_array = np.array(pd.to_numeric(self.df.iloc[:-1, i]))
 
-            taxonomic_str = self.df.iloc[self.number_of_rows - 1, col_num]  # Get Taxonomy string
+        for label, content in self.df.iteritems(): # iter through amplicon cols
+            data = np.array(content[:-1], dtype=float)
+            taxonomy = content[-1]
 
-            ''' Find Domain '''
-            level_str = 'unclassified'
-            if level > 0:
-                pos = taxonomic_str.find('d:')
-                if pos != -1:
-                    level_str = taxonomic_str[
-                             pos + 2:(len(taxonomic_str)) if (taxonomic_str.find(',', pos) == -1) else
-                             taxonomic_str.find(',', pos)]
+            taxonomy = ';'.join([
+                tax if tax != '' 
+                    else 'unclassified' 
+                    for tax in taxonomy.split(';')[:level]
+            ])
 
-            ''' Find Phylum '''
-            if level > 1:
-                pos = taxonomic_str.find('p:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
+            if taxonomy in self.the_dict:
+                self.the_dict[taxonomy] += data
+            else:
+                self.the_dict[taxonomy] = data
 
-            ''' Find Class '''
-            if level > 2:
-                pos = taxonomic_str.find('c:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
 
-            ''' Find Order '''
-            if level > 3:
-                pos = taxonomic_str.find('o:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
-
-            ''' Find Family '''
-            if level > 4:
-                pos = taxonomic_str.find('f:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
-
-            ''' Find Genus '''
-            if level > 5:
-                pos = taxonomic_str.find('g:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
-
-            """ Push to dictionary """
-            try:
-                self.the_dict[level_str] += col_values_np_array
-            except KeyError:
-                self.the_dict.update({level_str: col_values_np_array})
-
-    def percentize_the_dict(self, cutoff=-1.0):
+    def percentize_and_cutoff_the_dict(self, cutoff=-1.0):
         """
         Changes the_dict values to percentages based on sample_sums.
         Also groups based on given cutoff value into 'Other' group
@@ -174,6 +133,17 @@ class GraphData:
             if key in self.the_dict:
                 del self.the_dict[key]
 
+    def sort_the_dict(self):
+        '''
+        Sort `self.the_dict` by taxonomy key, but with `Other` last
+        '''
+        Other = self.the_dict.pop('Other') if 'Other' in self.the_dict else None
+
+        self.the_dict = dict(sorted(self.the_dict.items()))
+        
+        if Other is not None:
+            self.the_dict.update(Other=Other)
+
     def make_grp_dict(self, category_field_name):
         """
         returns a dictionary with keys being the different categories for grouping and values being lists of index
@@ -195,49 +165,158 @@ class GraphData:
                 grp_dict.update({category: [self.samples.index(sample)]})
         return grp_dict
 
-    def graph_by_group(self, level, cutoff, category_field_name):
+    def graph_by_group(self, level, cutoff, category_field_name=None):
         """
-        Method for grouped plotting with plotly and calling self._save_fig() method
-        :param level:
-        :param cutoff:
-        :param category_field_name:
-        :return:
+        VARS:
+
+        self
+        level
+        cutoff
+        category_field_name
+        grp_dict
+        self.the_dict (DE-INSTANTIATE)
+        self.other_count (DE-INSTANTIATE)
+        self.samples
+        html_folder
+        self.img_paths
+
+        FUNCS:
+
+        self.make_grp_dict
+        self._mk_dir
+        self._set_paths
+
         """
         logging.info('Graphing by group. level: {}, category: {}'.format(level, category_field_name))
         taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
-        grp_dict = self.make_grp_dict(category_field_name)
+        grp_dict = self.make_grp_dict(category_field_name); dprint('grp_dict', run=locals(), where=True)
 
-        plot_list = []
+
+
+
+        taxo_fig = make_subplots(
+            rows=1, 
+            cols=len(grp_dict),
+            horizontal_spacing=0.05,
+            x_title="Sample<br>Grouping by attribute: %s" % category_field_name,
+            subplot_titles=list(grp_dict.keys()),
+            column_widths=[len(ind_l) for ind_l in grp_dict.values()]
+        )
+
+        dprint(
+            '[len(ind_l) for ind_l in grp_dict.values()]',
+            '[len(ind_l)/len(self.mdf) for ind_l in grp_dict.values()]', 
+            'sum([len(ind_l)/len(self.mdf) for ind_l in grp_dict.values()])', 
+            run=locals()
+        )
+        
+        color_iter = itertools.cycle(px.colors.qualitative.Plotly)
+
+        """
         for taxo_str, vals in self.the_dict.items():
-            plot_x = []
-            plot_y = []
-            for grp_cat, grp_indxs in grp_dict.items():
-                plot_x.append(grp_cat)
+            if taxo_str == 'Other':
+                taxo_str += ' (' + str(self.other_count) + '), cutoff: ' + str(cutoff)            
+            marker_color = next(color_iter)
+            for col, (grp, grp_indxs) in zip(range(1, len(grp_dict) + 1), grp_dict.items()):
+                plot_x = []
+                plot_y = []
                 for i in grp_indxs:
                     plot_x.append(self.samples[i])
-                plot_y.append(0)
-                for i in grp_indxs:
                     plot_y.append(vals[i])
-            if taxo_str == 'Other':
-                taxo_str += '(' + str(self.other_count) + '), cutoff: ' + str(cutoff)
-            plot_list.append(go.Bar(name=taxo_str, x=plot_x, y=plot_y, hovertext=taxo_str))
+                taxo_fig.add_trace(
+                    go.Bar(
+                        name=taxo_str, 
+                        x=plot_x, 
+                        y=plot_y, 
+                        hovertext=taxo_str,
+                        legendgroup=taxo_str,
+                        marker_color=marker_color,
+                        showlegend=True if col == 1 else False,
+                    ), 
+                    row=1,
+                    col=col,
+                )
+        """
 
-        taxo_fig = go.Figure(data=plot_list)
-        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
-                               xaxis_title='Samples', yaxis_title='Percentage')
-        taxo_fig.update_xaxes(tickangle=-90)
+        taxo_fig.update_layout(
+            barmode='stack', 
+            bargap=0.03,
+            title_text=('Rank: ' + taxonomy_levels[level-1]), 
+            title_y=0.97,
+            title_x=0.5,
+            title_xref='paper',
+            yaxis_title='Proportion',
+            legend_traceorder='reversed',
+            margin=dict(b=115),
+        )
+        
+        # lower x_title
+        taxo_fig.layout.annotations[-1].update(
+            dict(
+                y=-0.04,            
+            )
+        )
+
+        taxo_fig.update_yaxes(
+            range=[0,1],
+        )
+        
+        taxo_fig.update_xaxes(
+            tickangle=15,
+        )
+
+        taxo_fig.update_layout(
+            updatemenus=[
+                dict(
+                    buttons=[
+                        dict(
+                            args=['showlegend', True],
+                            label='Show legend',
+                            method='relayout',
+                        ),
+                        dict(
+                            args=['showlegend', False],
+                            label='Hide legend',
+                            method='relayout',
+                        ),
+                    ],
+                    direction="down",
+                    pad={"r": 10, "t": 10},
+                    showactive=True,
+                    x=0,
+                    xanchor="left",
+                    y=1.1,
+                    yanchor="top"
+                )
+            ],
+        )
+
+        dprint(
+            'taxo_fig.layout.annotations',
+            'len(taxo_fig.layout.annotations)',
+            run=locals()
+        )
 
         html_folder = self._mk_dir()
         # Save plotly_fig.html and return path
         plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
         plot(taxo_fig, filename=plotly_html_file_path)
         self.img_paths.append(plotly_html_file_path)
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
-        taxo_fig.update_layout(showlegend=False)
-        plot(taxo_fig, filename=plotly_html_file_path)
-        self.img_paths.append(plotly_html_file_path)
 
-        self._shock_and_set_paths(html_folder)
+        self._set_paths(html_folder)
+
+        dprint(
+            'level',
+            'cutoff',
+            'category_field_name',
+            'grp_dict',
+            'self.the_dict',
+            'self.other_count',
+            'self.samples',
+            'html_folder',
+            'self.img_paths',
+            run=locals()
+        )
 
     def graph_all(self, level, cutoff):
         """
@@ -256,8 +335,8 @@ class GraphData:
 
         taxo_fig = go.Figure(data=plot_list)
         taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
-                               xaxis_title='Samples', yaxis_title='Percentage')
-        taxo_fig.update_xaxes(tickangle=-90)
+                               xaxis_title='Samples', yaxis_title='Proportion')
+        taxo_fig.update_xaxes(tickangle=15)
 
         html_folder = self._mk_dir()
         # Save plotly_fig.html and return path
@@ -269,7 +348,7 @@ class GraphData:
         plot(taxo_fig, filename=plotly_html_file_path)
         self.img_paths.append(plotly_html_file_path)
 
-        self._shock_and_set_paths(html_folder)
+        self._set_paths(html_folder)
 
     def _mk_dir(self):
         """
@@ -285,21 +364,17 @@ class GraphData:
         os.mkdir(html_folder)
         return html_folder
 
-    def _shock_and_set_paths(self, html_folder):
+    def _set_paths(self, html_folder):
         """
         Sets "self.html_paths" after calling dfu.file_to_shock
         :param html_folder:
         :return:
         """
-        # have needed files saved to folder before shock
-        shock = self.dfu.file_to_shock({'file_path': html_folder,
-                                        'make_handle': 0,
-                                        'pack': 'zip'})
         # list that goes to 'html_links'
-        self.html_paths.append({'shock_id': shock['shock_id'],
-                                'name': 'plotly_fig_without_legend.html',
-                                'label': 'Barplot without legend'})
-        self.html_paths.append({'shock_id': shock['shock_id'],
+        #self.html_paths.append({'path': os.path.join(html_folder, 'plotly_fig_without_legend.html'),
+        #                        'name': 'plotly_fig_without_legend.html',
+        #                        'label': 'Barplot without legend'})
+        self.html_paths.append({'path': os.path.join(html_folder, 'plotly_fig.html'),
                                 'name': 'plotly_fig.html',
                                 'label': 'Barplot with legend'})
 
@@ -313,12 +388,59 @@ class GraphData:
         """
         logging.info('graph_this(level={}, cutoff={}, category_field_name={})'.format(level, cutoff,
                                                                                       category_field_name))
-        self.push_to_the_dict(level)
-        self.percentize_the_dict(cutoff)
+        self.push_to_the_dict(level); dprint('self.the_dict', 'len(self.the_dict)', run=locals(), where=True)
+        self.percentize_and_cutoff_the_dict(cutoff); dprint('self.the_dict', 'len(self.the_dict)', run=locals(), where=True)
+        #self.sort_the_dict()
         if len(category_field_name) > 0:
             self.graph_by_group(level, cutoff, category_field_name)
         else:
             self.graph_all(level, cutoff)
+
+
+
+def get_id2taxonomy(attributes, instances) -> dict:
+    """
+    (1) Find acceptable taxonomy source in `attributes` 
+        rn limited to RDP taxonomy and taxonomy parsed/standardized at upload
+    (2) Collect into dict
+
+    :attributes: one of the fields of an AttributeMapping object, list of dicts
+    :instances: one of the fields of an AttributeMapping object, dict of lists
+    """
+ 
+    # Check for index of 'attribute'/'source' of either:
+    # * 'parsed_user_taxonomy'/'upload', or
+    # * 'RDP Classifier taxonomy'/'kb_rdp_classifier/run_classify, conf=*, gene=*, minWords=*', or
+    # TODO selecting amongst multiple taxonomy attributes
+    # TODO particularly: upload, rdp, multiple rdp with diff paramms
+    # TODO allow other formats by calling GenericsAPI process_taxonomy
+    d_usr = {'attribute': 'parsed_user_taxonomy', 'source': 'upload'} 
+    d_rdp = {
+        'attribute': 'RDP Classifier taxonomy', 
+        'source': 'kb_rdp_classifier/run_classify, conf=*, gene=*, minWords=*'
+    }
+
+    # TODO more precise matching
+    rdp_match_l = [d_rdp['attribute'] == attribute['attribute'] for attribute in attributes] # match by 'attribute' field
+
+    if d_usr in attributes:
+        ind = attributes.index(d_usr)
+        logging.info('Using source/attribute `%s`' % str(d_usr))
+    elif any(rdp_match_l):
+        ind = rdp_match_l.index(True)
+        logging.info('Using source/attribute `%s`' % str(d_rdp))
+    else:
+        raise Exception(
+            'Sorry, the row AttributeMapping `%s` referenced by input AmpliconMatrix `%s` '
+            'does not have one of the expected taxonomy fields, '
+            'which are `%s` or `%s`.' 
+            % (amp_mat_name, row_attrmap_name, str(d_usr), str(d_rdp))
+        )
+   
+    #
+    id2taxonomy = {id: instance[ind] for id, instance in instances.items()}
+    return id2taxonomy
+
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
@@ -333,6 +455,7 @@ def get_df(amp_permanent_id, dfu):
     logging.info('Getting DataObject')
     # Amplicon data
     obj = dfu.get_objects({'object_refs': [amp_permanent_id]})
+    amp_mat_name = obj['data'][0]['info'][1]
     amp_data = obj['data'][0]['data']
 
     row_ids = amp_data['data']['row_ids']
@@ -346,13 +469,18 @@ def get_df(amp_permanent_id, dfu):
         df.iloc[i, :-1] = values[i]
 
     # Get object
-    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref']
+    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref'] # TODO field is optional
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
-    tax_dict = obj['data'][0]['data']['instances']
+    row_attrmap_name = obj['data'][0]['info'][1]
+    attributes = obj['data'][0]['data']['attributes']
+    instances = obj['data'][0]['data']['instances']
+
+    # Get id2taxonomy dict
+    id2taxonomy = get_id2taxonomy(attributes, instances)
 
     # Add taxonomy data and transpose matrix
     for row_indx in df.index:
-        df.loc[row_indx]['taxonomy'] = tax_dict[row_indx][0]
+        df.loc[row_indx]['taxonomy'] = id2taxonomy[row_indx]
     df = df.T
     return df
 
@@ -406,11 +534,11 @@ def run(amp_id, attri_map_id, grouping_label, threshold, taxonomic_level, callba
     """
     logging.info('run(grouping: {}, cutoff: {}, level: {})'.format(grouping_label, threshold, taxonomic_level))
     dfu = DataFileUtil(callback_url)
-    df = get_df(amp_permanent_id=amp_id, dfu=dfu)
+    df = get_df(amp_permanent_id=amp_id, dfu=dfu)  # transpose of AmpMat df with taxonomy col appended
     try:
         if len(grouping_label) > 0:
             mdf = get_mdf(attribute_mapping_obj_ref=attri_map_id, category_name=grouping_label,
-                          dfu=dfu)
+                          dfu=dfu)  # df of sample to group
             g1 = GraphData(df=df, mdf=mdf, scratch=scratch, dfu=dfu)
     except TypeError:
         g1 = GraphData(df=df, mdf=pd.DataFrame(), scratch=scratch, dfu=dfu)

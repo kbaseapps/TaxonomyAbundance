@@ -1,0 +1,48 @@
+my $template = Template->new({
+    INCLUDE_PATH => '.',
+});
+
+$template->process('myfile');
+
+
+[% domain_content = INSERT './barchart/domain.html' %]
+
+
+page_content = [
+    {
+      name              => "Domain",
+      name_lc           => "domain",
+      rendered_content  => domain_content,
+    },
+    {
+      name              => "Phylum",
+      name_lc           => "phylum",
+      rendered_content  => graph_content,
+    },
+    {
+      name              => "Class",
+      name_lc           => "class",
+      rendered_content  => class_content,
+    },
+    {
+      name              => "Order",
+      name_lc           => "order",
+      rendered_content  => order_content,
+    },
+    {
+      name              => "Family",
+      name_lc           => "family",
+      rendered_content  => family_content,
+    },
+    {
+      name              => "Genus",
+      name_lc           => "genus",
+      rendered_content  => genus_content,
+    },
+];
+
+tabbed_layout( page_content = page_content );
+
+
+
+

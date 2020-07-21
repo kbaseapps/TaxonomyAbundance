@@ -2,14 +2,37 @@
 import os
 import time
 import unittest
+from unittest.mock import patch
 import logging
 from configparser import ConfigParser
 
 from TaxonomyAbundance.TaxonomyAbundanceImpl import TaxonomyAbundance
 from TaxonomyAbundance.TaxonomyAbundanceServer import MethodContext
 from TaxonomyAbundance.authclient import KBaseAuth as _KBaseAuth
-
 from installed_clients.WorkspaceClient import Workspace
+
+from TaxonomyAbundance import TAUtils
+from mocks import *
+
+
+######################################
+######################################
+######### TOGGLE PATCH ###############
+######################################
+###################################### 
+do_patch = True # toggle this to turn on/off @patch decorators
+
+if do_patch:
+    patch_ = patch
+    patch_dict_ = patch.dict
+
+else:
+    patch_ = lambda *args, **kwargs: lambda f: f
+    patch_dict_ = lambda *args, **kwargs: lambda f: f
+######################################
+######################################
+######################################
+######################################
 
 
 class TaxonomyAbundanceTest(unittest.TestCase):
@@ -60,6 +83,8 @@ class TaxonomyAbundanceTest(unittest.TestCase):
             print('Test workspace was deleted')
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    @patch_('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda callback_url: get_mock_dfu('moss-amp_standardizedTax'))
+    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *args, **kwargs: get_mock_kbr())
     def test_your_method(self):
         # Prepare test objects in workspace if needed using
         # self.getWsClient().save_objects({'workspace': self.getWsName(),
@@ -81,4 +106,8 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                                                                     'meta_group': ['Field name (informal classification)']
                                                                 },
                                                                 'workspace_name': self.wsName})
+
+        
+
+
 

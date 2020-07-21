@@ -1,2 +1,6 @@
 test_local
 sdk.cfg
+.*.sw[a-z]
+*.py.bak*
+__pycache__
+by_dataset_input/
