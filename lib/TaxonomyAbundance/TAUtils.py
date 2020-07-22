@@ -15,6 +15,8 @@ from installed_clients.DataFileUtilClient import DataFileUtil
 
 from dprint import dprint
 
+taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
+
 # GraphData
 class GraphData:
 
@@ -39,16 +41,13 @@ class GraphData:
         self.number_of_rows = len(self.df.index)
         # Sample list #
         self.samples = list(self.df.index)[:-1]
-        # Initialize dictionary #
-        self.the_dict = {}
         # Metadata Dict #
         self.metadata_dict = {}
-        # Number of taxonomic_stings in 'Other' category #
-        self.other_count = 0
 
         # Get sample_sums #
         self.sample_sums = self.compute_row_sums()
-
+        # Initialize dictionary #
+        self.the_dicts = {}
         # Set total_sum of entire Matrix #
         self.total_sum = 0
         for i in range(len(self.sample_sums)):
@@ -78,7 +77,7 @@ class GraphData:
 
     def push_to_the_dict(self, level=1):
         """
-        Iter through columns of self.the_dict,
+        Iter through columns of self.df,
         which consist of amplicon's AmpliconMatrix data and taxonomy.
         Truncate taxonomy to `level`
         and sum up all data for that amplicon
@@ -87,7 +86,7 @@ class GraphData:
         :return:
         """
         logging.info('Pushing into main dictionary for level: {}'.format(level))
-        self.the_dict.clear()
+        the_dict = dict()
 
         for label, content in self.df.iteritems(): # iter through amplicon cols
             data = np.array(content[:-1], dtype=float)
@@ -99,13 +98,15 @@ class GraphData:
                     for tax in taxonomy.split(';')[:level]
             ])
 
-            if taxonomy in self.the_dict:
-                self.the_dict[taxonomy] += data
+            if taxonomy in the_dict:
+                the_dict[taxonomy] += data
             else:
-                self.the_dict[taxonomy] = data
+                the_dict[taxonomy] = data
+
+        return the_dict
 
 
-    def percentize_and_cutoff_the_dict(self, cutoff=-1.0):
+    def percentize_and_cutoff_the_dict(self, the_dict, cutoff=-1.0):
         """
         Changes the_dict values to percentages based on sample_sums.
         Also groups based on given cutoff value into 'Other' group
@@ -114,41 +115,44 @@ class GraphData:
         """
         logging.info('Calculating percentages and making Other category for cutoff: {}'.format(cutoff))
         # Averages by dividing array 'y' by array 'self.sample_sums'
-        self.the_dict.update((x, y/self.sample_sums) for x, y in self.the_dict.items())
+        the_dict.update((x, y/self.sample_sums) for x, y in the_dict.items())
 
         # Makes 'Other' category and deletes the elements that that went in there as to not repeat
         to_del = list()
-        self.the_dict['Other'] = [0.0]
-        for x, y in self.the_dict.items():
+        the_dict['Other'] = [0.0]
+        other_count = 0
+        for x, y in the_dict.items():
             if all(a < cutoff for a in y) and x != 'Other':
-                self.other_count += 1
+                other_count += 1
                 try:
-                    self.the_dict['Other'] += y
+                    the_dict['Other'] += y
                 except ValueError:
-                    self.the_dict.update({'Other': y})
+                    the_dict.update({'Other': y})
                 to_del.append(x)
-        if all(a == 0.0 for a in self.the_dict['Other']):
+        if all(a == 0.0 for a in the_dict['Other']):
             to_del.append('Other')
         for key in to_del:
-            if key in self.the_dict:
-                del self.the_dict[key]
+            if key in the_dict:
+                del the_dict[key]
 
-    def sort_the_dict(self):
-        '''
-        Sort `self.the_dict` by taxonomy key, but with `Other` last
-        '''
-        Other = self.the_dict.pop('Other') if 'Other' in self.the_dict else None
+        return the_dict, other_count
 
-        self.the_dict = dict(sorted(self.the_dict.items()))
+    def sort_the_dict(self, the_dict):
+        '''
+        Sort `the_dict` by taxonomy key, but with `Other` last
+        '''
+        Other = the_dict.pop('Other') if 'Other' in the_dict else None
+
+        the_dict = dict(sorted(the_dict.items()))
         
         if Other is not None:
-            self.the_dict.update(Other=Other)
+            the_dict.update(Other=Other)
 
     def make_grp_dict(self, category_field_name):
         """
         returns a dictionary with keys being the different categories for grouping and values being lists of index
         numbers, the numbers correlate to the location the sample has in self.samples. These lists of numbers will
-        be used to graph elements of the array values in self.the_dict in the order of group. So like elements
+        be used to graph elements of the array values in the_dict in the order of group. So like elements
         pertaining to group1 are first then groups2.. etc.
         :param category_field_name:
         :return: grp_dict
@@ -165,7 +169,7 @@ class GraphData:
                 grp_dict.update({category: [self.samples.index(sample)]})
         return grp_dict
 
-    def graph_by_group(self, level, cutoff, category_field_name=None):
+    def graph_by_group(self, the_dict, other_count, level, cutoff, category_field_name=None):
         """
         VARS:
 
@@ -174,8 +178,8 @@ class GraphData:
         cutoff
         category_field_name
         grp_dict
-        self.the_dict (DE-INSTANTIATE)
-        self.other_count (DE-INSTANTIATE)
+        the_dict (DE-INSTANTIATE)
+        other_count (DE-INSTANTIATE)
         self.samples
         html_folder
         self.img_paths
@@ -188,17 +192,14 @@ class GraphData:
 
         """
         logging.info('Graphing by group. level: {}, category: {}'.format(level, category_field_name))
-        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
         grp_dict = self.make_grp_dict(category_field_name); dprint('grp_dict', run=locals(), where=True)
-
-
 
 
         taxo_fig = make_subplots(
             rows=1, 
             cols=len(grp_dict),
             horizontal_spacing=0.05,
-            x_title="Sample<br>Grouping by attribute: %s" % category_field_name,
+            x_title="Sample<br>Grouping by: %s" % category_field_name,
             subplot_titles=list(grp_dict.keys()),
             column_widths=[len(ind_l) for ind_l in grp_dict.values()]
         )
@@ -210,12 +211,11 @@ class GraphData:
             run=locals()
         )
         
-        color_iter = itertools.cycle(px.colors.qualitative.Plotly)
-
-        """
-        for taxo_str, vals in self.the_dict.items():
+        color_iter = itertools.cycle(px.colors.qualitative.Plotly) # reset color iter
+        traces = []
+        for taxo_str, vals in the_dict.items():
             if taxo_str == 'Other':
-                taxo_str += ' (' + str(self.other_count) + '), cutoff: ' + str(cutoff)            
+                taxo_str += ' (' + str(other_count) + '), cutoff: ' + str(cutoff)            
             marker_color = next(color_iter)
             for col, (grp, grp_indxs) in zip(range(1, len(grp_dict) + 1), grp_dict.items()):
                 plot_x = []
@@ -236,7 +236,22 @@ class GraphData:
                     row=1,
                     col=col,
                 )
-        """
+                taxo_fig.add_trace(
+                    go.Bar(
+                        name=taxo_str.upper(),
+                        x=plot_x,
+                        y=plot_y[::-1],
+                        hovertext=taxo_str.upper(),
+                        legendgroup=taxo_str,
+                        marker_color=marker_color,
+                        showlegend=True if col == 1 else False,
+                        visible=False,
+                    ),
+                    row=1,
+                    col=col
+                )
+
+        num_tax = len(taxo_fig.data)
 
         taxo_fig.update_layout(
             barmode='stack', 
@@ -265,6 +280,8 @@ class GraphData:
             tickangle=15,
         )
 
+        dropdown_y = 1.1
+
         taxo_fig.update_layout(
             updatemenus=[
                 dict(
@@ -285,7 +302,45 @@ class GraphData:
                     showactive=True,
                     x=0,
                     xanchor="left",
-                    y=1.1,
+                    y=dropdown_y,
+                    yanchor="top"
+                ),
+                dict(
+                    buttons=[
+                        dict(
+                            args=[
+                                {
+                                    'visible': [True, False] * num_tax,
+                                    'show_legend': [True, False] * num_tax
+                                },
+                                {
+                                    'title': 'Ordered'
+                                }
+
+                            ],
+                            label='Ordered',
+                            method='update'
+                        ),
+                        dict(
+                            args=[
+                                {
+                                    'visible': [False, True] * num_tax,
+                                    'show_legend': [False, True] * num_tax
+                                },
+                                {
+                                    'title': 'Reverse Ordered'
+                                }
+                            ],
+                            label='Reverse Ordered',
+                            method='update'
+                        )
+                    ],
+                    direction='down',
+                    pad={"r": 10, "t": 10},
+                    showactive=True,
+                    x=0.2,
+                    xanchor="left",
+                    y=dropdown_y,
                     yanchor="top"
                 )
             ],
@@ -310,8 +365,8 @@ class GraphData:
             'cutoff',
             'category_field_name',
             'grp_dict',
-            'self.the_dict',
-            'self.other_count',
+            'the_dict',
+            'other_count',
             'self.samples',
             'html_folder',
             'self.img_paths',
@@ -326,7 +381,6 @@ class GraphData:
         :return:
         """
         logging.info('Graphing. level: {}'.format(level))
-        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
         plot_list = []
         for key, val in self.the_dict.items():
             if key == 'Other':
@@ -370,10 +424,6 @@ class GraphData:
         :param html_folder:
         :return:
         """
-        # list that goes to 'html_links'
-        #self.html_paths.append({'path': os.path.join(html_folder, 'plotly_fig_without_legend.html'),
-        #                        'name': 'plotly_fig_without_legend.html',
-        #                        'label': 'Barplot without legend'})
         self.html_paths.append({'path': os.path.join(html_folder, 'plotly_fig.html'),
                                 'name': 'plotly_fig.html',
                                 'label': 'Barplot with legend'})
@@ -388,11 +438,16 @@ class GraphData:
         """
         logging.info('graph_this(level={}, cutoff={}, category_field_name={})'.format(level, cutoff,
                                                                                       category_field_name))
-        self.push_to_the_dict(level); dprint('self.the_dict', 'len(self.the_dict)', run=locals(), where=True)
-        self.percentize_and_cutoff_the_dict(cutoff); dprint('self.the_dict', 'len(self.the_dict)', run=locals(), where=True)
-        #self.sort_the_dict()
+        for level in range(1, len(taxonomy_levels)+1):
+            the_dict = self.push_to_the_dict(level); dprint('the_dict', 'len(the_dict)', run=locals(), where=True)
+            the_dict, other_count = self.percentize_and_cutoff_the_dict(the_dict, cutoff); dprint('the_dict', 'len(the_dict)', run=locals(), where=True)
+            self.the_dicts[taxonomy_levels[level-1]] = [
+                the_dict,
+                other_count
+            ]
+        dprint('self.the_dicts', run=locals())
         if len(category_field_name) > 0:
-            self.graph_by_group(level, cutoff, category_field_name)
+            self.graph_by_group(cutoff, category_field_name)
         else:
             self.graph_all(level, cutoff)
 
