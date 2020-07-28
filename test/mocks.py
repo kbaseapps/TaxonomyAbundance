@@ -16,12 +16,13 @@ from TaxonomyAbundance.dprint import dprint
 testData_dir = '/kb/module/test/data'
 ##################################
 ##################################
-
-moss_amp_AmpMat = '37967/3/2' # AmpliconMatrix
-moss_amp_colAttrMap = '37967/4/1' # col AttributeMapping
+# prod
+moss_amp_AmpMat = '67610/5/2' # AmpliconMatrix
+moss_amp_colAttrMap = '67610/2/1' # col AttributeMapping
 moss_amp_rowAttrMap ='59732/4/1' # row AttributeMapping
 
-
+# CI
+secret_wRDP_AmpMat = '49926/5/12' # AmpliconMatrix. With row AttributeMapping with taxonomy. Do not share
 ##################################
 ##################################
 
@@ -98,6 +99,7 @@ def get_mock_kbr(dataset=None):
 
 __all__ = [
     'moss_amp_AmpMat', 'moss_amp_rowAttrMap', 'moss_amp_colAttrMap', 
+    'secret_wRDP_AmpMat',
     'get_mock_dfu', 'get_mock_kbr'
 ]
 

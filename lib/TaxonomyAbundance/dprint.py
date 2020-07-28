@@ -18,6 +18,7 @@ MAX_LINES = 70
 
 def dprint(*args, run=False, json=True, where=False, time=False, max_lines=MAX_LINES, exit=False, 
            subproc_run_kwargs={}, print_kwargs={}):
+    '''Debug print'''
 
     if debug is not True:
         return -1 # dprint can be expected to return retcode
@@ -25,9 +26,9 @@ def dprint(*args, run=False, json=True, where=False, time=False, max_lines=MAX_L
     print = functools.partial(__builtins__['print'], **print_kwargs)
 
     def print_format(arg):
-        if isinstance(arg, (dict, list)):
+        if json is True and isinstance(arg, (dict, list)):
             arg_json = json_.dumps(arg, indent=3, default=str)
-            if arg_json.count('\n') > max_lines:
+            if max_lines is not None and arg_json.count('\n') > max_lines:
                 arg_json = '\n'.join(arg_json.split('\n')[0:max_lines] + ['...'])
             print(arg_json)
         else:

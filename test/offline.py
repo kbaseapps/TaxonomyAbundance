@@ -7,6 +7,7 @@ import sys
 import unittest
 from unittest.mock import patch
 import uuid
+import logging
 
 # relative paths
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -26,6 +27,9 @@ from dprint import dprint
 # make paths in other files relative
 mocks.testData_dir = testData_dir
 
+logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
+                    level=logging.INFO)
+
 
 class Test(unittest.TestCase):
 
@@ -42,7 +46,6 @@ class Test(unittest.TestCase):
             moss_amp_colAttrMap, 
             'Field name (informal classification)',
             0.005,
-            3,
             'dummy.com',
             scratch
         )
