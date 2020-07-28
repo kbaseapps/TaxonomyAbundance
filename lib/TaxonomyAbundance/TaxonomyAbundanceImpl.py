@@ -7,6 +7,8 @@ from TaxonomyAbundance.TAUtils import run
 
 from installed_clients.KBaseReportClient import KBaseReport
 
+from .dprint import dprint
+
 #END_HEADER
 
 
@@ -59,33 +61,31 @@ class TaxonomyAbundance:
 
         amplicon_matrix_ref = params.get('amplicon_matrix_ref')
         attri_mapping_ref = params.get('attri_mapping_ref')
-        threshold = params.get('threshold')
-        taxonomy_level = params.get('taxonomy_level')
-        grouping_label = params.get('grouping_label')
-        if grouping_label is not None:
-            grouping_label = grouping_label['meta_group'][0]
+        cutoff = params.get('threshold')
+        grouping_label = params.get('meta_group') # can be: None, [], [`label`]
+        if isinstance(grouping_label, list):
+            if len(grouping_label) == 0:
+                grouping_label = None
+            elif len(grouping_label) == 1:
+                grouping_label = grouping_label[0]
+            else:
+                raise ValueError('`grouping_label` wrong value')
+        elif grouping_label is not None:
+            raise TypeError('`grouping_label` wrong type')
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
-        paths = run(amp_id=amplicon_matrix_ref,
-                        attri_map_id=attri_mapping_ref, grouping_label=grouping_label, threshold=threshold,
-                        taxonomic_level=taxonomy_level, callback_url=self.callback_url, scratch=self.shared_folder)
-        file_links = list()
-        for path in paths['img_paths']:
-            file_links.append({
-                'path': path,
-                'name': os.path.basename(path),
-                'label': "Bar chart",
-                'description': "A bar graph without the legend, and another bar graph with the legend."
-            })
+        html_link = run(amp_id=amplicon_matrix_ref,
+                    attri_map_id=attri_mapping_ref, grouping_label=grouping_label, cutoff=cutoff,
+                    callback_url=self.callback_url, scratch=self.shared_folder)
+
 
         report_client = KBaseReport(self.callback_url, token=self.token)
-        report_name = "Bar_chart_amplicon_sheet_report_" + str(uuid.uuid4())
+        report_name = "TaxonomyAbundance_report_" + str(uuid.uuid4())
         report_info = report_client.create_extended_report({
             'direct_html_link_index': 0,
-            'file_links': file_links,
-            'html_links': paths['html_paths'],
+            'html_links': [html_link],
             'report_object_name': report_name,
             'workspace_name': params['workspace_name']
         })

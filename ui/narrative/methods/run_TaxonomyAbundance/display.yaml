@@ -1,10 +1,10 @@
 #
 # define display information
 #
-name: Generate Taxonomy Abundance Barplot
+name: Taxonomy Abundance Barplot
 
 tooltip: |
-    Creates a relative abundance bar chart for taxa at the specified taxonomic level, along with optional grouping of bars based on sample data.
+    Create a relative abundance bar chart at all main taxonomic ranks, along with optional grouping of bars based on sample metadata.
 
 screenshots: []
 
@@ -26,7 +26,7 @@ suggestions:
 parameters :
     amplicon_matrix_ref :
         ui-name : |
-            Amplicon Matrix
+            AmpliconMatrix
         short-hint : |
             AmpliconMatrix with raw count data
         long-hint  : |
@@ -34,41 +34,27 @@ parameters :
 
     attri_mapping_ref:
         ui-name: |
-            Metadata AttributeMapping
+            Column AttributeMapping,<br>contains sample metadata
         short-hint: |
-            AttributeMapping where metadata for grouping is stored.
+            Column AttributeMapping with sample attributes or metadata, for grouping samples
         long-hint: |
-            This is optional, but required if grouping samples by sample data.
+            This is optional, but required if grouping samples by sample metadata.
 
     threshold:
         ui-name: |
             Cutoff
         short-hint: |
-            The relative abundance threshold below which taxa will be lumped into the 'Other' category. 
+            The relative abundance threshold below which taxa will be pooled into the `Other` category. 
         long-hint: |
-            The relative abundance threshold below which taxa will be lumped into the 'Other' category.
-
-    taxonomy_level:
-        ui-name: |
-            Taxonomic Level
-        short-hint: |
-            1-6
-        long-hint: |
-            Abundance of taxa will be summed and plotted at the specified taxonomic level:
-            1)Domain 2)Phylum 3)Class 4)Order 5)Family 6)Genus
+            The relative abundance threshold below which taxa will be pooled into the `Other` category.
 
     meta_group:
         ui-name: |
-            Metadata Grouping Column Name
+            Column attribute or sample metadata<br>to group samples by
         short-hint: |
             Bars will be plotted grouped by sample data in specified column. 
         long-hint: |
             Bars will be plotted grouped by sample data in specified column.
-
-parameter-groups :
-    grouping_label:
-        ui-name : Meta Group
-        short-hint :  Select an attribute to group by
 
 description : |
     <h3>Description: </h3>
@@ -83,18 +69,13 @@ description : |
 
     <p>1)	AmpliconMatrix: This takes in an AmpliconMatrix object as input, expecting raw count data. </p>
 
-    <p>2)	Taxonomic Level: Each OTU is assigned a ‘taxonomic-string’ that is taken from their taxonomy information and
-    subset based on the chosen taxonomic level. Ex: If the user chooses "3)Class" for the Taxonomic Level, the taxonomic
-    strings will consist of the Domain, Phylum, and Class. If any of these levels are missing, ‘unclassified’ will be put
-    in its place.</p>
-
-    <p>3)	Cutoff: When there are many different taxa, the bar plot will have many tiny blocks in the bars that might
+    <p>2)	Cutoff: When there are many different taxa, the bar plot will have many tiny blocks in the bars that might
     make it hard to see them all. This cutoff feature allows the user to specify a percentage that for any taxon that
     falls under it for each sample, it will be place in a category named ‘Other’. The default is 0.005 or 0.5%.</p>
 
     <p><b>Optional:</b></p>
 
-    <p>4)	Metadata AttributeMapping & Meta Group: This allows the user to pick metadata to organize the bar plot. This
+    <p>3)	Metadata AttributeMapping & Meta Group: This allows the user to pick metadata to organize the bar plot. This
     puts samples that share the same meta group side by side with an extra space between the other meta groups. This allows
     the user to better compare similar samples from one another. The user just needs to select the Metadata object to use
     and select a field from that object to do the metadata grouping by.</p>

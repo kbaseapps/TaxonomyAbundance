@@ -1,324 +1,379 @@
 from plotly.offline import plot
 import plotly.graph_objs as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly
 import pandas as pd
 import numpy as np
 import os
 import uuid
 import logging
-from installed_clients.WorkspaceClient import Workspace as Workspace
-from installed_clients.DataFIleUtilClient import DataFileUtil
+import itertools
+import re
 
+from installed_clients.WorkspaceClient import Workspace as Workspace
+from installed_clients.DataFileUtilClient import DataFileUtil
+
+from .dprint import dprint
+from .error import * # custom exception classes
+
+RANKS = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
 
 # GraphData
 class GraphData:
 
-    def __init__(self, df, mdf, scratch=None, dfu=None):
+    def __init__(self, df, sample2group_df, cutoff, scratch):
         """
-        This class takes parameters: pandas.DataFrame datafile with taxonomy being bottom row, and another
-        pandas.DataFrame having range(len()) indexes and two columns for sample ID and category name
-        :param df:
-        :param mdf:
+        :param df: pandas.DataFrame dataframe with taxonomy being bottom row
+        :param sample2group_df: pandas.DataFrame having range(len()) indexes
+                    and two columns for sample ID and category name
         :param scratch:
         :param dfu:
         """
         logging.info('GraphData class initializing...')
         # Set datafile.csv variable #
         self.df = df
-        self.mdf = mdf
-        # kbase client stuff
-        self.scratch = scratch
-        self.dfu = dfu
+        self.sample2group_df = sample2group_df
 
-        # Number of rows and columns #
-        self.number_of_cols = len(self.df.columns)
-        self.number_of_rows = len(self.df.index)
+        # Directory structure #
+        self.run_dir = os.path.join(scratch, 'tax_bar_' + str(uuid.uuid4()))
+        os.mkdir(self.run_dir)
+
         # Sample list #
-        self.samples = list(self.df.index)
-        # Initialize dictionary #
-        self.the_dict = {}
-        # Metadata Dict #
-        self.metadata_dict = {}
-        # Number of taxonomic_stings in 'Other' category #
-        self.other_count = 0
+        self.samples = list(self.df.index)[:-1]
 
         # Get sample_sums #
         self.sample_sums = self.compute_row_sums()
-
         # Set total_sum of entire Matrix #
         self.total_sum = 0
         for i in range(len(self.sample_sums)):
             self.total_sum += self.sample_sums[i]
 
         # METADATA #
-        if not mdf.empty:
-            self.mdf_categories = self.compute_mdf_categories()
-        self.metadata_grouping = []
 
-        # Paths
-        self.html_paths = []
-        self.img_paths = []
+        # Calc tax2vals_d for each level #
+        self.the_dict = {}
+        self.compute_the_dict(cutoff)
 
-    def compute_mdf_categories(self):
-        return list(self.mdf.columns)
 
     def compute_row_sums(self):
         row_sums = []
         for sample in self.df.index:
             try:
                 row_sums.append(pd.to_numeric(self.df.loc[sample]).sum())
-            except ValueError:
+            except ValueError: # last row is taxonomies
                 return np.array(row_sums)
         return np.array(row_sums)
 
-    def push_to_the_dict(self, level=1):
+    def get_tax2vals_d(self, level):
         """
-        The first part, if else statements, gets taxonomic string to use as dictionary key.
-        The last part, try except, pushes data into dictionary.
-        :param level:
+        Iter through columns of self.df,
+        which consist of amplicon's AmpliconMatrix data and taxonomy.
+        Truncate taxonomy to `level`
+        and sum up all data for that amplicon
+
+        :param level: in {0, ..., 5} corresponding to {Domain, ..., Genus}
         :return:
         """
         logging.info('Pushing into main dictionary for level: {}'.format(level))
-        self.the_dict.clear()
-        for i in range(len(self.df.columns)):
-            # d: p: c: o: f: g:
-            col_num = i
-            col_values_np_array = np.array(pd.to_numeric(self.df.iloc[:-1, i]))
+        tax2vals_d = dict()
 
-            taxonomic_str = self.df.iloc[self.number_of_rows - 1, col_num]  # Get Taxonomy string
+        for label, content in self.df.iteritems(): # iter through amplicon cols
+            data = np.array(content[:-1], dtype=float)
+            taxonomy = content[-1]
 
-            ''' Find Domain '''
-            level_str = 'unclassified'
-            if level > 0:
-                pos = taxonomic_str.find('d:')
-                if pos != -1:
-                    level_str = taxonomic_str[
-                             pos + 2:(len(taxonomic_str)) if (taxonomic_str.find(',', pos) == -1) else
-                             taxonomic_str.find(',', pos)]
+            taxonomy = ';'.join([
+                tax if tax != '' 
+                    else 'unclassified' 
+                    for tax in taxonomy.split(';')[:level+1]
+            ])
 
-            ''' Find Phylum '''
-            if level > 1:
-                pos = taxonomic_str.find('p:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
+            if taxonomy in tax2vals_d:
+                tax2vals_d[taxonomy] += data
+            else:
+                tax2vals_d[taxonomy] = data
 
-            ''' Find Class '''
-            if level > 2:
-                pos = taxonomic_str.find('c:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
+        return tax2vals_d
 
-            ''' Find Order '''
-            if level > 3:
-                pos = taxonomic_str.find('o:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
 
-            ''' Find Family '''
-            if level > 4:
-                pos = taxonomic_str.find('f:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
-
-            ''' Find Genus '''
-            if level > 5:
-                pos = taxonomic_str.find('g:')
-                if pos != -1:
-                    level_str = level_str + ';' + taxonomic_str[pos + 2:(len(taxonomic_str)) if (
-                            taxonomic_str.find(',', pos) == -1) else taxonomic_str.find(',', pos)]
-                else:
-                    level_str = level_str + ';' + 'unclassified'
-
-            """ Push to dictionary """
-            try:
-                self.the_dict[level_str] += col_values_np_array
-            except KeyError:
-                self.the_dict.update({level_str: col_values_np_array})
-
-    def percentize_the_dict(self, cutoff=-1.0):
+    def percentize_cutoff_tax2vals_d(self, tax2vals_d, cutoff):
         """
-        Changes the_dict values to percentages based on sample_sums.
+        Changes tax2vals_d values to percentages based on sample_sums.
         Also groups based on given cutoff value into 'Other' group
         :param cutoff
         :return:
         """
         logging.info('Calculating percentages and making Other category for cutoff: {}'.format(cutoff))
         # Averages by dividing array 'y' by array 'self.sample_sums'
-        self.the_dict.update((x, y/self.sample_sums) for x, y in self.the_dict.items())
+        tax2vals_d.update((x, y/self.sample_sums) for x, y in tax2vals_d.items())
 
         # Makes 'Other' category and deletes the elements that that went in there as to not repeat
         to_del = list()
-        self.the_dict['Other'] = [0.0]
-        for x, y in self.the_dict.items():
+        tax2vals_d['Other'] = [0.0]
+        other_count = 0
+        for x, y in tax2vals_d.items():
             if all(a < cutoff for a in y) and x != 'Other':
-                self.other_count += 1
+                other_count += 1
                 try:
-                    self.the_dict['Other'] += y
+                    tax2vals_d['Other'] += y
                 except ValueError:
-                    self.the_dict.update({'Other': y})
+                    tax2vals_d.update({'Other': y})
                 to_del.append(x)
-        if all(a == 0.0 for a in self.the_dict['Other']):
+        if all(a == 0.0 for a in tax2vals_d['Other']):
             to_del.append('Other')
+        else:
+            tax2vals_d['Other (num=%d, cutoff=%g)' % (other_count, cutoff)] = tax2vals_d.pop('Other')
+
         for key in to_del:
-            if key in self.the_dict:
-                del self.the_dict[key]
+            if key in tax2vals_d:
+                del tax2vals_d[key]
 
-    def make_grp_dict(self, category_field_name):
-        """
-        returns a dictionary with keys being the different categories for grouping and values being lists of index
-        numbers, the numbers correlate to the location the sample has in self.samples. These lists of numbers will
-        be used to graph elements of the array values in self.the_dict in the order of group. So like elements
-        pertaining to group1 are first then groups2.. etc.
-        :param category_field_name:
-        :return: grp_dict
-        """
-        logging.info('Making group dictionary for metadata column: {}'.format(category_field_name))
-        grp_dict = {}
-        metadata_samples = list(self.mdf.iloc[0:, 0])
-        col_indx = self.mdf_categories.index(category_field_name)
-        self.metadata_grouping = list(self.mdf.iloc[0:, col_indx])
-        for category, sample in zip(self.metadata_grouping, metadata_samples):
-            try:
-                grp_dict[category].append(self.samples.index(sample))
-            except KeyError:
-                grp_dict.update({category: [self.samples.index(sample)]})
-        return grp_dict
+        return tax2vals_d
 
-    def graph_by_group(self, level, cutoff, category_field_name):
-        """
-        Method for grouped plotting with plotly and calling self._save_fig() method
-        :param level:
-        :param cutoff:
-        :param category_field_name:
-        :return:
-        """
-        logging.info('Graphing by group. level: {}, category: {}'.format(level, category_field_name))
-        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
-        grp_dict = self.make_grp_dict(category_field_name)
-
-        plot_list = []
-        for taxo_str, vals in self.the_dict.items():
-            plot_x = []
-            plot_y = []
-            for grp_cat, grp_indxs in grp_dict.items():
-                plot_x.append(grp_cat)
-                for i in grp_indxs:
-                    plot_x.append(self.samples[i])
-                plot_y.append(0)
-                for i in grp_indxs:
-                    plot_y.append(vals[i])
-            if taxo_str == 'Other':
-                taxo_str += '(' + str(self.other_count) + '), cutoff: ' + str(cutoff)
-            plot_list.append(go.Bar(name=taxo_str, x=plot_x, y=plot_y, hovertext=taxo_str))
-
-        taxo_fig = go.Figure(data=plot_list)
-        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
-                               xaxis_title='Samples', yaxis_title='Percentage')
-        taxo_fig.update_xaxes(tickangle=-90)
-
-        html_folder = self._mk_dir()
-        # Save plotly_fig.html and return path
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
-        plot(taxo_fig, filename=plotly_html_file_path)
-        self.img_paths.append(plotly_html_file_path)
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
-        taxo_fig.update_layout(showlegend=False)
-        plot(taxo_fig, filename=plotly_html_file_path)
-        self.img_paths.append(plotly_html_file_path)
-
-        self._shock_and_set_paths(html_folder)
-
-    def graph_all(self, level, cutoff):
-        """
-        Method for plotting with plotly and calling self._save_fig() method
-        :param level:
-        :param cutoff:
-        :return:
-        """
-        logging.info('Graphing. level: {}'.format(level))
-        taxonomy_levels = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
-        plot_list = []
-        for key, val in self.the_dict.items():
-            if key == 'Other':
-                key += '(' + str(self.other_count) + '), cutoff: ' + str(cutoff)
-            plot_list.append(go.Bar(name=key, x=self.samples, y=val))
-
-        taxo_fig = go.Figure(data=plot_list)
-        taxo_fig.update_layout(barmode='stack', title=('Bar Plot level: ' + taxonomy_levels[level-1]), bargap=0.05,
-                               xaxis_title='Samples', yaxis_title='Percentage')
-        taxo_fig.update_xaxes(tickangle=-90)
-
-        html_folder = self._mk_dir()
-        # Save plotly_fig.html and return path
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig.html")
-        plot(taxo_fig, filename=plotly_html_file_path)
-        self.img_paths.append(plotly_html_file_path)
-        plotly_html_file_path = os.path.join(html_folder, "plotly_fig_without_legend.html")
-        taxo_fig.update_layout(showlegend=False)
-        plot(taxo_fig, filename=plotly_html_file_path)
-        self.img_paths.append(plotly_html_file_path)
-
-        self._shock_and_set_paths(html_folder)
-
-    def _mk_dir(self):
-        """
-        Makes a folder directory to save the plotly html figures.
-        :return: html_folder_path
-        """
-        logging.info('Making html directory')
-        # set up directory in scratch
-        output_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        os.mkdir(output_dir)
-        # set up directory for html folder
-        html_folder = os.path.join(output_dir, 'html')
-        os.mkdir(html_folder)
-        return html_folder
-
-    def _shock_and_set_paths(self, html_folder):
-        """
-        Sets "self.html_paths" after calling dfu.file_to_shock
-        :param html_folder:
-        :return:
-        """
-        # have needed files saved to folder before shock
-        shock = self.dfu.file_to_shock({'file_path': html_folder,
-                                        'make_handle': 0,
-                                        'pack': 'zip'})
-        # list that goes to 'html_links'
-        self.html_paths.append({'shock_id': shock['shock_id'],
-                                'name': 'plotly_fig_without_legend.html',
-                                'label': 'Barplot without legend'})
-        self.html_paths.append({'shock_id': shock['shock_id'],
-                                'name': 'plotly_fig.html',
-                                'label': 'Barplot with legend'})
-
-    def graph_this(self, level=1, cutoff=-1.0, category_field_name=''):
+    def compute_the_dict(self, cutoff):
         """
         Calls methods to analyze data and graph. Determines whether to graph with grouping or not.
         :param level:
         :param cutoff:
-        :param category_field_name:
         :return:
         """
-        logging.info('graph_this(level={}, cutoff={}, category_field_name={})'.format(level, cutoff,
-                                                                                      category_field_name))
-        self.push_to_the_dict(level)
-        self.percentize_the_dict(cutoff)
-        if len(category_field_name) > 0:
-            self.graph_by_group(level, cutoff, category_field_name)
+        logging.info('graph_this(cutoff={})'.format(cutoff))
+        for level, rank in enumerate(RANKS):
+            tax2vals_d = self.get_tax2vals_d(level)
+            tax2vals_d = self.percentize_cutoff_tax2vals_d(tax2vals_d, cutoff)
+            self.the_dict[rank] = tax2vals_d
+
+    def make_grp2inds_d(self, category_field_name):
+        """
+        returns a dictionary with keys being the different categories for grouping and values being lists of index
+        numbers, the numbers correlate to the location the sample has in self.samples. These lists of numbers will
+        be used to graph elements of the array values in tax2vals_d in the order of group. So like elements
+        pertaining to group1 are first then groups2.. etc.
+        :param category_field_name:
+        :return: grp2inds_d
+        """
+        logging.info('Making group dictionary for metadata column: {}'.format(category_field_name))
+
+        grp2inds_d = {}
+        metadata_samples = list(self.sample2group_df.iloc[:, 0])
+        metadata_grouping = list(self.sample2group_df.iloc[:, 1])
+        for category, sample in zip(metadata_grouping, metadata_samples):
+            try:
+                grp2inds_d[category].append(self.samples.index(sample))
+            except KeyError:
+                grp2inds_d.update({category: [self.samples.index(sample)]})
+        return grp2inds_d
+
+    def graph(self, category_field_name):
+        """
+        """
+        logging.info('Graphing by group. category: {}'.format(category_field_name))
+
+        if category_field_name is None:
+            grp2inds_d = {'': list(range(len(self.samples)))}
+            num_grps = 1
         else:
-            self.graph_all(level, cutoff)
+            grp2inds_d = self.make_grp2inds_d(category_field_name); dprint('grp2inds_d', run=locals(), where=True)
+            num_grps = len(grp2inds_d)
+
+        taxo_fig = make_subplots(
+            rows=1, 
+            cols=num_grps,
+            horizontal_spacing=0.05,
+            x_title="Sample" + ("" if category_field_name is None else "<br>Grouped by: %s" % category_field_name),
+            subplot_titles=list(grp2inds_d.keys()),
+            column_widths=[len(inds) for inds in grp2inds_d.values()], # TODO account for horizontal_space and bargap
+        )
+        
+        start_rank = 'Class'
+        start_level = 2
+
+        for rank, tax2vals_d in self.the_dict.items():
+            color_iter = itertools.cycle(px.colors.qualitative.Plotly) # reset color iter TODO set to Alphabet
+            for taxo_str, vals in tax2vals_d.items():
+                marker_color = next(color_iter)
+                for col, (grp, grp_inds) in zip(range(1, len(grp2inds_d) + 1), grp2inds_d.items()):
+                    plot_x = []
+                    plot_y = []
+                    for i in grp_inds:
+                        plot_x.append(self.samples[i])
+                        plot_y.append(vals[i])
+                    taxo_fig.add_trace(
+                        go.Bar(
+                            name=taxo_str, 
+                            x=plot_x, 
+                            y=plot_y, 
+                            hovertext=taxo_str,
+                            legendgroup=taxo_str,
+                            marker_color=marker_color,
+                            showlegend=True if col == 1 else False,
+                            visible=True if rank == start_rank else False,
+                        ), 
+                        row=1,
+                        col=col,
+                    )
+
+        taxo_fig.update_layout(
+            barmode='stack', 
+            bargap=0.03,
+            legend_traceorder='reversed',
+            title_text='Rank: %s' % start_rank, 
+            title_y=0.94 if category_field_name is None else 0.97,
+            title_x=0.5,
+            title_yref='container',
+            title_xref='paper',
+            yaxis_title='Proportion',
+            yaxis_range=[0, 1],
+            xaxis_tickangle=10,
+            margin=dict(b=115), # since xaxis title is annotation, needs to be lowered, liable to fall off
+        )
+        
+        # lower x_title
+        taxo_fig.layout.annotations[-1].update(
+            dict(
+                y=-0.05 if category_field_name is None else -0.04,      
+            )
+        )
+
+        # update axes here
+        # to affect all subplots
+        taxo_fig.update_yaxes(range=[0, 1])
+        taxo_fig.update_xaxes(tickangle=10)
+
+        # number traces per rank
+        num_taxonomy = [len(tax2vals_d) for tax2vals_d in self.the_dict.values()]
+        num_traces = [len(tax2vals_d) * num_grps for tax2vals_d in self.the_dict.values()]
+
+        dprint('num_grps', 'num_taxonomy', 'num_traces', run=locals(), json=False)
+
+        dropdown_y = 1.1 if category_field_name is None else 1.15
+        
+        def get_vis_mask(rank_ind, select):
+            '''For toggling trace visibilities when selecting rank'''
+            mask = []
+            for i in range(len(RANKS)):
+                if i != rank_ind:
+                    mask += [False] * num_traces[i]
+                elif select == 'trace':
+                    mask += [True] * num_traces[i]
+                elif select == 'legend':
+                    mask += ([True] + [False] * (num_grps-1)) * num_taxonomy[i]
+                else:
+                    raise Exception()
+            return mask
+
+        buttons = [
+            dict(
+                args=[
+                    {
+                        'visible': get_vis_mask(i, 'trace'), 
+                        'showlegend': get_vis_mask(i, 'legend')
+                    }, 
+                    {
+                        'title': 'Rank: %s' % rank
+                    }
+                ], 
+                label=rank, 
+                method='update'
+            ) 
+            for i, rank in enumerate(RANKS)
+        ]
+
+        taxo_fig.update_layout(
+            updatemenus=[
+                dict(
+                    buttons=[
+                        dict(
+                            args=['showlegend', True],
+                            label='Show legend',
+                            method='relayout',
+                        ),
+                        dict(
+                            args=['showlegend', False],
+                            label='Hide legend',
+                            method='relayout',
+                        ),
+                    ],
+                    direction="down",
+                    pad={"r": 10, "t": 10},
+                    showactive=True,
+                    x=0,
+                    xanchor="left",
+                    y=dropdown_y,
+                    yanchor="top"
+                ),
+                dict(
+                    buttons=buttons,
+                    active=start_level,
+                    direction='down',
+                    pad={"r": 10, "t": 10},
+                    showactive=True,
+                    x=0.12,
+                    xanchor="left",
+                    y=dropdown_y,
+                    yanchor="top"
+                )
+            ],
+        )
+
+        dprint(
+            'taxo_fig.layout.annotations',
+            'len(taxo_fig.layout.annotations)',
+            run=locals()
+        )
+
+        # write plotly html
+
+        plotly_html_flpth = os.path.join(self.run_dir, "plotly_bar.html")
+        plot(taxo_fig, filename=plotly_html_flpth)
+        
+        return {
+            'path': plotly_html_flpth,
+            'name': 'plotly_bar.html',
+        } 
+
+
+def get_id2taxonomy(attributes, instances) -> dict:
+    """
+    (1) Find acceptable taxonomy source in `attributes` 
+        rn limited to RDP taxonomy and taxonomy parsed/standardized at upload
+    (2) Collect into dict
+
+    :attributes: one of the fields of an AttributeMapping object, list of dicts
+    :instances: one of the fields of an AttributeMapping object, dict of lists
+    """
+ 
+    # Check for index of 'attribute'/'source' of either:
+    # * 'parsed_user_taxonomy'/'upload', or
+    # * 'RDP Classifier taxonomy'/'kb_rdp_classifier/run_classify, conf=*, gene=*, minWords=*', or
+    # TODO selecting amongst multiple taxonomy attributes
+    # TODO particularly: upload, rdp, multiple rdp with diff paramms
+    # TODO allow other formats by calling GenericsAPI process_taxonomy
+    d_usr = {'attribute': 'parsed_user_taxonomy', 'source': 'upload'} 
+
+    rdp_match_l = [attribute['attribute'].lower().startswith('rdp classifier taxonomy') for attribute in attributes] # match by 'attribute' field
+    
+    if d_usr in attributes:
+        ind = attributes.index(d_usr)
+        logging.info('Using source/attribute `%s`' % str(d_usr))
+    elif any(rdp_match_l):
+        ind = rdp_match_l.index(True)
+        logging.info('Using source/attribute `%s`' % str(attributes[ind]))
+    else:
+        dprint('instances', 'attributes', run=locals())
+        raise ObjectException(
+            'Sorry, the row AttributeMapping referenced by input AmpliconMatrix '
+            'does not have one of the expected taxonomy fields, '
+            'which are: `%s` '
+            'or any attribute starting with `RDP Classifier taxonomy` (case insensitive). '
+            'You can run kb_rdp_classifier to get the latter'
+            % (str(d_usr))
+        )
+   
+    #
+    id2taxonomy = {id: instance[ind] for id, instance in instances.items()}
+    return id2taxonomy
+
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
@@ -333,6 +388,7 @@ def get_df(amp_permanent_id, dfu):
     logging.info('Getting DataObject')
     # Amplicon data
     obj = dfu.get_objects({'object_refs': [amp_permanent_id]})
+    amp_mat_name = obj['data'][0]['info'][1]
     amp_data = obj['data'][0]['data']
 
     row_ids = amp_data['data']['row_ids']
@@ -345,19 +401,32 @@ def get_df(amp_permanent_id, dfu):
     for i in range(len(row_ids)):
         df.iloc[i, :-1] = values[i]
 
+    # Check for row AttributeMapping object #
+    if 'row_attributemapping_ref' not in obj['data'][0]['data']:
+        msg = (
+            'Sorry, input AmpliconMatrix does not have a row AttributeMapping '
+            'supplying taxonomic attributes for the amplicons.'
+        )
+        raise NoWorkspaceReferenceException(msg)
+
     # Get object
-    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref']
+    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref'] # TODO field is optional
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
-    tax_dict = obj['data'][0]['data']['instances']
+    row_attrmap_name = obj['data'][0]['info'][1]
+    attributes = obj['data'][0]['data']['attributes']
+    instances = obj['data'][0]['data']['instances']
+
+    # Get id2taxonomy dict
+    id2taxonomy = get_id2taxonomy(attributes, instances)
 
     # Add taxonomy data and transpose matrix
-    for row_indx in df.index:
-        df.loc[row_indx]['taxonomy'] = tax_dict[row_indx][0]
+    for row_ind in df.index:
+        df.loc[row_ind]['taxonomy'] = id2taxonomy[row_ind]
     df = df.T
     return df
 
 
-def get_mdf(attribute_mapping_obj_ref, category_name, dfu):
+def get_sample2group_df(attribute_mapping_obj_ref, category_name, dfu):
     """
     Metadata: make range(len()) index matrix with ID and Category columns
     :param attribute_mapping_obj_ref:
@@ -368,55 +437,47 @@ def get_mdf(attribute_mapping_obj_ref, category_name, dfu):
     logging.info('Getting MetadataObject')
     # Get object
     obj = dfu.get_objects({'object_refs': [attribute_mapping_obj_ref]})
-    meta_dict = obj['data'][0]['data']['instances']
+    meta_d = obj['data'][0]['data']['instances']
     attr_l = obj['data'][0]['data']['attributes']
 
     # Find index of specified category name
-    indx = 0
+    ind = 0
     for i in range(len(attr_l)):
         if attr_l[i]['attribute'] == category_name:
-            indx = i
+            ind = i
             break
     # Set metadata_samples
-    metadata_samples = meta_dict.keys()
+    metadata_samples = meta_d.keys()
     # Make pandas DataFrame
-    mdf = pd.DataFrame(index=range(len(metadata_samples)), columns=['ID', category_name])
+    sample2group_df = pd.DataFrame(index=range(len(metadata_samples)), columns=['ID', category_name])
     i = 0
-    for key, val in meta_dict.items():
-        mdf.iloc[i] = [key, val[indx]]
+    for key, val in meta_d.items():
+        sample2group_df.iloc[i] = [key, val[ind]]
         i += 1
-    return mdf
+
+    dprint('sample2group_df', run=locals())
+
+    return sample2group_df
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, attri_map_id, grouping_label, threshold, taxonomic_level, callback_url, scratch):
+def run(amp_id, attri_map_id, grouping_label, cutoff, callback_url, scratch):
     """
     First method that is ran. Makes instance of GraphData class. Determines whether to get metadata or not.
     :param amp_id:
     :param attri_map_id:
     :param grouping_label:
-    :param threshold:
-    :param taxonomic_level:
+    :param cutoff:
     :param callback_url:
     :param scratch:
-    :return: {
-        'img_paths': g1.img_paths,
-        'html_paths': g1.html_paths
-        }
+    :return:
     """
-    logging.info('run(grouping: {}, cutoff: {}, level: {})'.format(grouping_label, threshold, taxonomic_level))
+    logging.info('run(grouping: {}, cutoff: {})'.format(grouping_label, cutoff))
     dfu = DataFileUtil(callback_url)
-    df = get_df(amp_permanent_id=amp_id, dfu=dfu)
-    try:
-        if len(grouping_label) > 0:
-            mdf = get_mdf(attribute_mapping_obj_ref=attri_map_id, category_name=grouping_label,
-                          dfu=dfu)
-            g1 = GraphData(df=df, mdf=mdf, scratch=scratch, dfu=dfu)
-    except TypeError:
-        g1 = GraphData(df=df, mdf=pd.DataFrame(), scratch=scratch, dfu=dfu)
-        grouping_label = ""
-    g1.graph_this(level=int(taxonomic_level), cutoff=threshold, category_field_name=grouping_label)
-    return {
-        'img_paths': g1.img_paths,
-        'html_paths': g1.html_paths
-    }
+    df = get_df(amp_permanent_id=amp_id, dfu=dfu)  # transpose of AmpMat df with taxonomy col appended
+    if grouping_label is not None:
+        sample2group_df = get_sample2group_df(
+            attribute_mapping_obj_ref=attri_map_id, category_name=grouping_label, dfu=dfu)  # df of sample to group
+    else:
+        sample2group_df = None
+    return GraphData(df=df, sample2group_df=sample2group_df, cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)

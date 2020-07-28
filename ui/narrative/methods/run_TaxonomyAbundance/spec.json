@@ -23,7 +23,7 @@
     {
       "id" : "attri_mapping_ref",
       "optional" : true,
-      "advanced" : false,
+      "advanced" : true,
       "allow_multiple" : false,
       "default_values" : [ "" ],
       "field_type" : "text",
@@ -34,7 +34,7 @@
     {
       "id": "threshold",
       "optional": false,
-      "advanced": false,
+      "advanced": true,
       "allow_multiple": false,
       "default_values": [ "0.005" ],
       "field_type": "text",
@@ -45,46 +45,8 @@
       }
     },
     {
-      "id" : "taxonomy_level",
-      "optional" : false,
-      "advanced" : false,
-      "allow_multiple" : false,
-      "default_values" : [],
-      "field_type" : "dropdown",
-      "dropdown_options":
-      {
-        "options":
-        [
-          {
-              "display": "1: Domain",
-              "value": 1
-          },
-          {
-              "display": "2: Phylum",
-              "value": 2
-          },
-          {
-              "display": "3: Class",
-              "value": 3
-          },
-          {
-              "display": "4: Order",
-              "value": 4
-          },
-          {
-              "display": "5: Family",
-              "value": 5
-          },
-          {
-              "display": "6: Genus",
-              "value": 6
-          }
-        ]
-      }
-    },
-    {
       "id": "meta_group",
-      "optional": false,
+      "optional": true,
       "advanced": true,
       "allow_multiple": false,
       "default_values": [ "" ],
@@ -97,21 +59,9 @@
           "selection_id": "attribute"
         },
         "multiselection": false,
-        "show_src_obj": false,
+        "show_src_obj": true,
         "allow_custom": false
       }
-    }
-  ],
-  "parameter-groups": [
-    {
-      "id": "grouping_label",
-      "parameters": [
-        "meta_group"
-      ],
-      "optional": true,
-      "allow_multiple": false,
-      "with_border": false,
-      "advanced" : false
     }
   ],
   "behavior" : {
@@ -139,19 +89,11 @@
           "target_property" : "threshold"
         },
         {
-          "input_parameter" : "taxonomy_level",
-          "target_property" : "taxonomy_level"
-        },
-        {
-          "input_parameter" : "grouping_label",
-          "target_property" : "grouping_label"
+          "input_parameter": "meta_group",
+          "target_property": "meta_group"
         }
       ],
       "output_mapping" : [
-        {
-          "narrative_system_variable": "workspace",
-          "target_property": "wsName"
-        },
         {
             "service_method_output_path": [0, "report_name"],
             "target_property": "report_name"
