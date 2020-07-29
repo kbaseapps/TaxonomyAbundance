@@ -59,6 +59,10 @@ class TaxonomyAbundance:
         # return variables are: output
         #BEGIN run_TaxonomyAbundance
 
+        # TODO only accept meta_group if attri_mapping_ref has value (ui bug)
+
+        logging.info(params)
+
         amplicon_matrix_ref = params.get('amplicon_matrix_ref')
         attri_mapping_ref = params.get('attri_mapping_ref')
         cutoff = params.get('threshold')
@@ -69,9 +73,9 @@ class TaxonomyAbundance:
             elif len(grouping_label) == 1:
                 grouping_label = grouping_label[0]
             else:
-                raise ValueError('`grouping_label` wrong value')
+                raise ValueError('`grouping_label` wrong value: %s' % str(grouping_label))
         elif grouping_label is not None:
-            raise TypeError('`grouping_label` wrong type')
+            raise TypeError('`grouping_label` wrong type: %s' % str(type(grouping_label)))
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"

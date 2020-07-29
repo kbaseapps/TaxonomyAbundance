@@ -21,7 +21,7 @@ from mocks import * # mocks, upas ...
 ######### TOGGLE PATCH ###############
 ######################################
 ###################################### 
-do_patch = False # toggle this to turn on/off @patch decorators
+do_patch = True # toggle this to turn on/off @patch decorators
 
 if do_patch:
     patch_ = patch
@@ -87,6 +87,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         '''Override unittest using test*() docstrings in lieu of test*() method name in output summary'''
         return None
 
+    # TODO try looking up col AttrMap from AmpMat?
 
     @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
     @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
@@ -150,6 +151,6 @@ prod_tests = ['test_no_taxonomy']
 
 for key, value in TaxonomyAbundanceTest.__dict__.copy().items():
     if type(key) == str and key.startswith('test') and callable(value):
-        if key in CI_tests:
+        if key not in run_tests:
             delattr(TaxonomyAbundanceTest, key)
             pass
