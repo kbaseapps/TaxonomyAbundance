@@ -66,16 +66,7 @@ class TaxonomyAbundance:
         amplicon_matrix_ref = params.get('amplicon_matrix_ref')
         attri_mapping_ref = params.get('attri_mapping_ref')
         cutoff = params.get('threshold')
-        grouping_label = params.get('meta_group') # can be: None, [], [`label`]
-        if isinstance(grouping_label, list):
-            if len(grouping_label) == 0:
-                grouping_label = None
-            elif len(grouping_label) == 1:
-                grouping_label = grouping_label[0]
-            else:
-                raise ValueError('`grouping_label` wrong value: %s' % str(grouping_label))
-        elif grouping_label is not None:
-            raise TypeError('`grouping_label` wrong type: %s' % str(type(grouping_label)))
+        grouping_label = params.get('meta_group') # can be: '', 'label'
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"

@@ -104,7 +104,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'amplicon_matrix_ref': moss_amp_AmpMat,
                 'attri_mapping_ref': moss_amp_colAttrMap,
                 'threshold': 0.005,
-                'meta_group': ['Field name (informal classification)'],
+                'meta_group': 'Field name (informal classification)',
             })
 
         # without grouping
@@ -114,7 +114,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'amplicon_matrix_ref': moss_amp_AmpMat,
                 'attri_mapping_ref': moss_amp_colAttrMap,
                 'threshold': 0.005,
-                'meta_group': [],
+                'meta_group': '',
             })
 
 
@@ -126,7 +126,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'amplicon_matrix_ref': secret_wRDP_AmpMat,
                 'attri_mapping_ref': None,
                 'threshold': 0.005,
-                'meta_group': [],
+                'meta_group': '',
             })
  
 
@@ -138,7 +138,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                     'amplicon_matrix_ref': moss_amp_AmpMat,
                     'attri_mapping_ref': moss_amp_colAttrMap,
                     'threshold': 0.005,
-                    'meta_group': ['Field name (informal classification)'],
+                    'meta_group': 'Field name (informal classification)',
                 })
             logging.info(str(cm))
 
