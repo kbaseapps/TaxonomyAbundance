@@ -100,6 +100,14 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'meta_group': 'Field name (informal classification)',
             })
 
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': moss_amp_AmpMat,
+                'attri_mapping_ref': moss_amp_colAttrMap,
+                'threshold': 0.005,
+                'meta_group': '',
+            })
 
 
     @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))

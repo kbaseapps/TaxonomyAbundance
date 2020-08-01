@@ -246,7 +246,7 @@ class GraphData:
 
         dprint('num_grps', 'num_taxonomy', 'num_traces', run=locals(), json=False)
 
-        dropdown_y = 1.1 if category_field_name is None else 1.15
+        dropdown_y = 1.05 if category_field_name is None else 1.10
         
         def get_vis_mask(rank_ind, select):
             '''For toggling trace visibilities when selecting rank'''
@@ -300,7 +300,7 @@ class GraphData:
                     x=0,
                     xanchor="left",
                     y=dropdown_y,
-                    yanchor="top"
+                    yanchor="bottom"
                 ),
                 dict(
                     buttons=buttons,
@@ -308,10 +308,10 @@ class GraphData:
                     direction='down',
                     pad={"r": 10, "t": 10},
                     showactive=True,
-                    x=0.12,
+                    x=0.15,
                     xanchor="left",
                     y=dropdown_y,
-                    yanchor="top"
+                    yanchor="bottom"
                 )
             ],
         )
