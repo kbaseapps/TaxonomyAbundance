@@ -87,7 +87,6 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         '''Override unittest using test*() docstrings in lieu of test*() method name in output summary'''
         return None
 
-    # TODO try looking up col AttrMap from AmpMat?
 
     @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
     @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
@@ -117,6 +116,25 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'meta_group': '',
             })
 
+        # without grouping
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': moss_amp_AmpMat,
+                'attri_mapping_ref': None,
+                'threshold': 0.005,
+                'meta_group': 'Field name (informal classification)',
+            })
+
+        # without grouping
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': moss_amp_AmpMat,
+                'attri_mapping_ref': None,
+                'threshold': 0.005,
+                'meta_group': '',
+            })
 
     @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
     def test_remote_data(self):
@@ -130,6 +148,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
             })
  
 
+    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
     def test_no_taxonomy(self):
         with self.assertRaises(ObjectException) as cm:
             ret = self.serviceImpl.run_TaxonomyAbundance(
@@ -143,7 +162,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
             logging.info(str(cm))
 
 
-run_tests = ['test_local_data']
+run_tests = ['test_remote_data']
 local_tests = ['test_local_data']
 CI_tests = ['test_remote_data']
 prod_tests = ['test_no_taxonomy']
@@ -151,6 +170,6 @@ prod_tests = ['test_no_taxonomy']
 
 for key, value in TaxonomyAbundanceTest.__dict__.copy().items():
     if type(key) == str and key.startswith('test') and callable(value):
-        if key not in run_tests:
+        if key not in prod_tests:
             delattr(TaxonomyAbundanceTest, key)
             pass

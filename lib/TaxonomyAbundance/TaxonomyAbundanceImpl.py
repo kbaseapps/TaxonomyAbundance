@@ -59,20 +59,20 @@ class TaxonomyAbundance:
         # return variables are: output
         #BEGIN run_TaxonomyAbundance
 
-        # TODO only accept meta_group if attri_mapping_ref has value (ui bug)
-
         logging.info(params)
 
-        amplicon_matrix_ref = params.get('amplicon_matrix_ref')
-        attri_mapping_ref = params.get('attri_mapping_ref')
-        cutoff = params.get('threshold')
-        grouping_label = params.get('meta_group') # can be: '', 'label'
+        # extract params
+        # do some transformations against narrative ui
+        amplicon_matrix_ref = params.get('amplicon_matrix_ref') # required
+        attri_mapping_ref = params.get('attri_mapping_ref') # can be None, 'u/p/a'
+        cutoff = params.get('threshold') # required
+        grouping_label = params.get('meta_group') if params.get('meta_group') != '' else None # can be: '', 'label' -> None, 'label'
 
         csv_fp = "/kb/module/data/smalltx.csv"
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
         html_link = run(amp_id=amplicon_matrix_ref,
-                    attri_map_id=attri_mapping_ref, grouping_label=grouping_label, cutoff=cutoff,
+                    col_attrmap_ref=attri_mapping_ref, grouping_label=grouping_label, cutoff=cutoff,
                     callback_url=self.callback_url, scratch=self.shared_folder)
 
 

@@ -189,7 +189,7 @@ class GraphData:
         start_level = 2
 
         for rank, tax2vals_d in self.the_dict.items():
-            color_iter = itertools.cycle(px.colors.qualitative.Plotly) # reset color iter TODO set to Alphabet
+            color_iter = itertools.cycle(px.colors.qualitative.Alphabet) # TODO choose color
             for taxo_str, vals in tax2vals_d.items():
                 marker_color = next(color_iter)
                 for col, (grp, grp_inds) in zip(range(1, len(grp2inds_d) + 1), grp2inds_d.items()):
@@ -410,7 +410,7 @@ def get_df(amp_permanent_id, dfu):
         raise NoWorkspaceReferenceException(msg)
 
     # Get object
-    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref'] # TODO field is optional
+    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref']
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
     row_attrmap_name = obj['data'][0]['info'][1]
     attributes = obj['data'][0]['data']['attributes']
@@ -426,17 +426,17 @@ def get_df(amp_permanent_id, dfu):
     return df
 
 
-def get_sample2group_df(attribute_mapping_obj_ref, category_name, dfu):
+def get_sample2group_df(col_attrmap_ref, category_name, dfu):
     """
     Metadata: make range(len()) index matrix with ID and Category columns
-    :param attribute_mapping_obj_ref:
+    :param col_attrmap_ref:
     :param category_name:
     :param dfu:
     :return:
     """
     logging.info('Getting MetadataObject')
     # Get object
-    obj = dfu.get_objects({'object_refs': [attribute_mapping_obj_ref]})
+    obj = dfu.get_objects({'object_refs': [col_attrmap_ref]})
     meta_d = obj['data'][0]['data']['instances']
     attr_l = obj['data'][0]['data']['attributes']
 
@@ -461,11 +461,11 @@ def get_sample2group_df(attribute_mapping_obj_ref, category_name, dfu):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, attri_map_id, grouping_label, cutoff, callback_url, scratch):
+def run(amp_id, col_attrmap_ref, grouping_label, cutoff, callback_url, scratch):
     """
     First method that is ran. Makes instance of GraphData class. Determines whether to get metadata or not.
     :param amp_id:
-    :param attri_map_id:
+    :param col_attrmap_ref:
     :param grouping_label:
     :param cutoff:
     :param callback_url:
@@ -473,11 +473,18 @@ def run(amp_id, attri_map_id, grouping_label, cutoff, callback_url, scratch):
     :return:
     """
     logging.info('run(grouping: {}, cutoff: {})'.format(grouping_label, cutoff))
+
+    # make col_attrmap_ref and grouping_label match
+    if col_attrmap_ref is None:
+        grouping_label = None
+    elif grouping_label is None:
+        col_attrmap_ref = None
+
     dfu = DataFileUtil(callback_url)
-    df = get_df(amp_permanent_id=amp_id, dfu=dfu)  # transpose of AmpMat df with taxonomy col appended
-    if grouping_label is not None:
+    df = get_df(amp_permanent_id=amp_id, dfu=dfu)  # transpose of AmpMat df with taxonomy col appended TODO don't transpose since it's a common format
+    if col_attrmap_ref is not None and grouping_label is not None:
         sample2group_df = get_sample2group_df(
-            attribute_mapping_obj_ref=attri_map_id, category_name=grouping_label, dfu=dfu)  # df of sample to group
+            col_attrmap_ref=col_attrmap_ref, category_name=grouping_label, dfu=dfu)  # df of sample to group
     else:
         sample2group_df = None
     return GraphData(df=df, sample2group_df=sample2group_df, cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)
