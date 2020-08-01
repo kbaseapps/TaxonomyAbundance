@@ -90,6 +90,20 @@ class TaxonomyAbundanceTest(unittest.TestCase):
 
     @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
     @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
+    def test(self):
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': moss_amp_AmpMat,
+                'attri_mapping_ref': moss_amp_colAttrMap,
+                'threshold': 0.005,
+                'meta_group': 'Field name (informal classification)',
+            })
+
+
+
+    @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
+    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
     def test_local_data(self):
         '''
         Don't un-patch since the `parsed_user_taxonomy` doesn't exist on the remote version
@@ -162,7 +176,7 @@ class TaxonomyAbundanceTest(unittest.TestCase):
             logging.info(str(cm))
 
 
-run_tests = ['test_remote_data']
+run_tests = ['test']
 local_tests = ['test_local_data']
 CI_tests = ['test_remote_data']
 prod_tests = ['test_no_taxonomy']
@@ -170,6 +184,6 @@ prod_tests = ['test_no_taxonomy']
 
 for key, value in TaxonomyAbundanceTest.__dict__.copy().items():
     if type(key) == str and key.startswith('test') and callable(value):
-        if key not in prod_tests:
+        if key not in run_tests:
             delattr(TaxonomyAbundanceTest, key)
             pass
