@@ -224,7 +224,7 @@ class GraphData:
             title_xref='paper',
             yaxis_title='Proportion',
             yaxis_range=[0, 1],
-            xaxis_tickangle=10,
+            xaxis_tickangle=45,
             margin=dict(b=115), # since xaxis title is annotation, needs to be lowered, liable to fall off
         )
         
@@ -238,7 +238,7 @@ class GraphData:
         # update axes here
         # to affect all subplots
         taxo_fig.update_yaxes(range=[0, 1])
-        taxo_fig.update_xaxes(tickangle=10)
+        taxo_fig.update_xaxes(tickangle=45)
 
         # number traces per rank
         num_taxonomy = [len(tax2vals_d) for tax2vals_d in self.the_dict.values()]
