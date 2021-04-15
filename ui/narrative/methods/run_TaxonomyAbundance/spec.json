@@ -21,17 +21,6 @@
       }
     },
     {
-      "id" : "attri_mapping_ref",
-      "optional" : true,
-      "advanced" : true,
-      "allow_multiple" : false,
-      "default_values" : [ "" ],
-      "field_type" : "text",
-      "text_options" : {
-        "valid_ws_types" : ["KBaseExperiments.AttributeMapping"]
-      }
-    },
-    {
       "id": "threshold",
       "optional": false,
       "advanced": true,
@@ -53,10 +42,55 @@
       "field_type": "textsubdata",
       "textsubdata_options": {
         "subdata_selection": {
-          "parameter_id": "attri_mapping_ref",
-          "subdata_included": ["attributes/[*]/attribute"],
-          "path_to_subdata": ["attributes"],
-          "selection_id": "attribute"
+           "parameter_id": "amplicon_matatrix_ref",
+           "path_to_subdata": [
+               "col_attributemapping_ref",
+               "<WSREF>",
+               "attributes"
+           ],
+           "subdata_included": [
+               "attributes/[*]/attribute",
+               "attributes/[*]/source",
+               "col_attributemapping_ref"
+           ],
+           "selection_id": "attribute",
+           "selection_description": [
+               "attribute",
+               "source"
+           ],
+           "description_template": "source: {{source}}"
+        },
+        "multiselection": false,
+        "show_src_obj": true,
+        "allow_custom": false
+      }
+    },
+    {
+      "id": "tax_field",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [ "" ],
+      "field_type": "textsubdata",
+      "textsubdata_options": {
+        "subdata_selection": {
+           "parameter_id": "amplicon_matatrix_ref",
+           "path_to_subdata": [
+               "row_attributemapping_ref",
+               "<WSREF>",
+               "attributes"
+           ],
+           "subdata_included": [
+               "attributes/[*]/attribute",
+               "attributes/[*]/source",
+               "row_attributemapping_ref"
+           ],
+           "selection_id": "attribute",
+           "selection_description": [
+               "attribute",
+               "source"
+           ],
+           "description_template": "source: {{source}}"
         },
         "multiselection": false,
         "show_src_obj": true,
@@ -84,17 +118,16 @@
           "target_type_transform": "resolved-ref"
         },
         {
-          "input_parameter" : "attri_mapping_ref",
-          "target_property" : "attri_mapping_ref",
-          "target_type_transform": "resolved-ref"
-        },
-        {
           "input_parameter" : "threshold",
           "target_property" : "threshold"
         },
         {
           "input_parameter": "meta_group",
           "target_property": "meta_group"
+        },
+        {
+          "input_parameter": "tax_field",
+          "target_property": "tax_field"
         }
       ],
       "output_mapping" : [

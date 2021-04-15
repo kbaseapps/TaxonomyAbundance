@@ -32,14 +32,6 @@ parameters :
         long-hint  : |
             AmpliconMatrix with raw count data
 
-    attri_mapping_ref:
-        ui-name: |
-            Column AttributeMapping,<br>contains sample metadata
-        short-hint: |
-            Column AttributeMapping with sample attributes or metadata, for grouping samples
-        long-hint: |
-            This is optional, but required if grouping samples by sample metadata.
-
     threshold:
         ui-name: |
             Cutoff
@@ -55,6 +47,11 @@ parameters :
             Bars will be plotted grouped by sample data in specified column. 
         long-hint: |
             Bars will be plotted grouped by sample data in specified column.
+    tax_field:
+        ui-name: |
+            Taxonomy field
+        short-hint: |
+            Taxonomy field
 
 description : |
     <h3>Description: </h3>

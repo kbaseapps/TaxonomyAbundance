@@ -11,11 +11,7 @@ import logging
 import itertools
 import re
 
-from installed_clients.WorkspaceClient import Workspace as Workspace
-from installed_clients.DataFileUtilClient import DataFileUtil
-
-from .dprint import dprint
-from .error import * # custom exception classes
+from .debug import dprint
 
 RANKS = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
 
@@ -169,7 +165,7 @@ class GraphData:
         """
         logging.info('Graphing by group. category: {}'.format(category_field_name))
 
-        if category_field_name is None:
+        if not category_field_name:
             grp2inds_d = {'': list(range(len(self.samples)))}
             num_grps = 1
         else:
@@ -180,7 +176,7 @@ class GraphData:
             rows=1, 
             cols=num_grps,
             horizontal_spacing=0.05,
-            x_title="Sample" + ("" if category_field_name is None else "<br>Grouped by: %s" % category_field_name),
+            x_title="Sample" + ("" if category_field_name else "<br>Grouped by: %s" % category_field_name),
             subplot_titles=list(grp2inds_d.keys()),
             column_widths=[len(inds) for inds in grp2inds_d.values()], # TODO account for horizontal_space and bargap
         )
@@ -218,7 +214,7 @@ class GraphData:
             bargap=0.03,
             legend_traceorder='reversed',
             title_text='Rank: %s' % start_rank, 
-            title_y=0.94 if category_field_name is None else 0.97,
+            title_y=0.94 if category_field_name else 0.97,
             title_x=0.5,
             title_yref='container',
             title_xref='paper',
@@ -231,7 +227,7 @@ class GraphData:
         # lower x_title
         taxo_fig.layout.annotations[-1].update(
             dict(
-                y=-0.05 if category_field_name is None else -0.04,      
+                y=-0.05 if category_field_name else -0.04,      
             )
         )
 
@@ -246,7 +242,7 @@ class GraphData:
 
         dprint('num_grps', 'num_taxonomy', 'num_traces', run=locals(), json=False)
 
-        dropdown_y = 1.05 if category_field_name is None else 1.10
+        dropdown_y = 1.05 if category_field_name else 1.10
         
         def get_vis_mask(rank_ind, select):
             '''For toggling trace visibilities when selecting rank'''
@@ -333,43 +329,10 @@ class GraphData:
         } 
 
 
-def get_id2taxonomy(attributes, instances) -> dict:
-    """
-    (1) Find acceptable taxonomy source in `attributes` 
-        rn limited to RDP taxonomy and taxonomy parsed/standardized at upload
-    (2) Collect into dict
-
-    :attributes: one of the fields of an AttributeMapping object, list of dicts
-    :instances: one of the fields of an AttributeMapping object, dict of lists
-    """
- 
-    # Check for index of 'attribute'/'source' of either:
-    # * 'parsed_user_taxonomy'/'upload', or
-    # * 'RDP Classifier taxonomy'/'kb_rdp_classifier/run_classify, conf=*, gene=*, minWords=*', or
-    # TODO selecting amongst multiple taxonomy attributes
-    # TODO particularly: upload, rdp, multiple rdp with diff paramms
-    # TODO allow other formats by calling GenericsAPI process_taxonomy
-    d_usr = {'attribute': 'parsed_user_taxonomy', 'source': 'upload'} 
-
-    rdp_match_l = [attribute['attribute'].lower().startswith('rdp classifier taxonomy') for attribute in attributes] # match by 'attribute' field
-    
-    if d_usr in attributes:
-        ind = attributes.index(d_usr)
-        logging.info('Using source/attribute `%s`' % str(d_usr))
-    elif any(rdp_match_l):
-        ind = rdp_match_l.index(True)
-        logging.info('Using source/attribute `%s`' % str(attributes[ind]))
-    else:
-        dprint('instances', 'attributes', run=locals())
-        raise ObjectException(
-            'Sorry, the row AttributeMapping referenced by input AmpliconMatrix '
-            'does not have one of the expected taxonomy fields, '
-            'which are: `%s` '
-            'or any attribute starting with `RDP Classifier taxonomy` (case insensitive). '
-            'You can run kb_rdp_classifier to get the latter'
-            % (str(d_usr))
-        )
-   
+def get_id2taxonomy(attributes, instances, tax_field) -> dict:
+    for ind, d in enumerate(attributes):
+        if d['attribute'] == tax_field:
+            break
     #
     id2taxonomy = {id: instance[ind] for id, instance in instances.items()}
     return id2taxonomy
@@ -377,7 +340,7 @@ def get_id2taxonomy(attributes, instances) -> dict:
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
-def get_df(amp_permanent_id, dfu):
+def get_df(amp_data, tax_field, dfu):
     """
     Get Amplicon Matrix Data then make Pandas.DataFrame(),
     also get taxonomy data and add it to df, then transpose and return
@@ -387,10 +350,7 @@ def get_df(amp_permanent_id, dfu):
     """
     logging.info('Getting DataObject')
     # Amplicon data
-    obj = dfu.get_objects({'object_refs': [amp_permanent_id]})
-    amp_mat_name = obj['data'][0]['info'][1]
-    amp_data = obj['data'][0]['data']
-
+    
     row_ids = amp_data['data']['row_ids']
     col_ids = amp_data['data']['col_ids']
     values = amp_data['data']['values']
@@ -401,23 +361,15 @@ def get_df(amp_permanent_id, dfu):
     for i in range(len(row_ids)):
         df.iloc[i, :-1] = values[i]
 
-    # Check for row AttributeMapping object #
-    if 'row_attributemapping_ref' not in obj['data'][0]['data']:
-        msg = (
-            'Sorry, input AmpliconMatrix does not have a row AttributeMapping '
-            'supplying taxonomic attributes for the amplicons.'
-        )
-        raise NoWorkspaceReferenceException(msg)
-
     # Get object
-    test_row_attributes_permanent_id = obj['data'][0]['data']['row_attributemapping_ref']
+    test_row_attributes_permanent_id = amp_data['row_attributemapping_ref']
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
     row_attrmap_name = obj['data'][0]['info'][1]
     attributes = obj['data'][0]['data']['attributes']
     instances = obj['data'][0]['data']['instances']
 
     # Get id2taxonomy dict
-    id2taxonomy = get_id2taxonomy(attributes, instances)
+    id2taxonomy = get_id2taxonomy(attributes, instances, tax_field)
 
     # Add taxonomy data and transpose matrix
     for row_ind in df.index:
@@ -461,30 +413,27 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, col_attrmap_ref, grouping_label, cutoff, callback_url, scratch):
+def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch):
     """
     First method that is ran. Makes instance of GraphData class. Determines whether to get metadata or not.
     :param amp_id:
-    :param col_attrmap_ref:
-    :param grouping_label:
+    :param tax_field:
     :param cutoff:
+    :param grouping_label:
     :param callback_url:
     :param scratch:
     :return:
     """
     logging.info('run(grouping: {}, cutoff: {})'.format(grouping_label, cutoff))
 
-    # make col_attrmap_ref and grouping_label match
-    if col_attrmap_ref is None:
-        grouping_label = None
-    elif grouping_label is None:
-        col_attrmap_ref = None
+    matrix_obj = dfu.get_objects({'object_refs': [amp_id]})['data'][0]['data']
 
-    dfu = DataFileUtil(callback_url)
-    df = get_df(amp_permanent_id=amp_id, dfu=dfu)  # transpose of AmpMat df with taxonomy col appended TODO don't transpose since it's a common format
-    if col_attrmap_ref is not None and grouping_label is not None:
+    df = get_df(matrix_obj, tax_field, dfu)  # transpose of AmpMat df with taxonomy col appended
+    if grouping_label:
         sample2group_df = get_sample2group_df(
-            col_attrmap_ref=col_attrmap_ref, category_name=grouping_label, dfu=dfu)  # df of sample to group
+            col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
+            category_name=grouping_label, 
+            dfu=dfu)  # df of sample to group
     else:
         sample2group_df = None
     return GraphData(df=df, sample2group_df=sample2group_df, cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)

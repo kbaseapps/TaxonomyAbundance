@@ -11,29 +11,8 @@ from TaxonomyAbundance.authclient import KBaseAuth as _KBaseAuth
 from installed_clients.WorkspaceClient import Workspace
 
 from TaxonomyAbundance.TaxonomyAbundanceImpl import TaxonomyAbundance
-from TaxonomyAbundance.error import * # custom exceptions
 from TaxonomyAbundance import TAUtils
 from mocks import * # mocks, upas ...
-
-
-######################################
-######################################
-######### TOGGLE PATCH ###############
-######################################
-###################################### 
-do_patch = True # toggle this to turn on/off @patch decorators
-
-if do_patch:
-    patch_ = patch
-    patch_dict_ = patch.dict
-
-else:
-    patch_ = lambda *args, **kwargs: lambda f: f
-    patch_dict_ = lambda *args, **kwargs: lambda f: f
-######################################
-######################################
-######################################
-######################################
 
 
 class TaxonomyAbundanceTest(unittest.TestCase):
@@ -76,54 +55,22 @@ class TaxonomyAbundanceTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-
-        logging.info('tearDownClass')
-
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
 
     def shortDescription(self):
-        '''Override unittest using test*() docstrings in lieu of test*() method name in output summary'''
         return None
 
-
-    @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
-    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
-    def test(self):
-        ret = self.serviceImpl.run_TaxonomyAbundance(
-            self.ctx, {
-                'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': moss_amp_colAttrMap,
-                'threshold': 0.005,
-                'meta_group': 'Field name (informal classification)',
-            })
-
-        ret = self.serviceImpl.run_TaxonomyAbundance(
-            self.ctx, {
-                'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': moss_amp_colAttrMap,
-                'threshold': 0.005,
-                'meta_group': '',
-            })
-
-
-    @patch('TaxonomyAbundance.TAUtils.DataFileUtil', new=lambda *a, **k: get_mock_dfu('moss-amp_standardizedTax'))
-    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
-    def test_local_data(self):
-        '''
-        Don't un-patch since the `parsed_user_taxonomy` doesn't exist on the remote version
-        '''
-        logging.info('test_your_method')
-
+    @patch('TaxonomyAbundance.TaxonomyAbundanceImpl.DataFileUtil', new=lambda *a, **k: mock_dfu)
+    @patch('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: mock_kbr)
+    def test_with_col_attr_map(self):
         # with grouping
         ret = self.serviceImpl.run_TaxonomyAbundance(
             self.ctx, {
                 'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': moss_amp_colAttrMap,
+                'amplicon_matrix_ref': moss_AmpMat,
+                'tax_field': 'taxonomy',
                 'threshold': 0.005,
                 'meta_group': 'Field name (informal classification)',
             })
@@ -132,66 +79,33 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         ret = self.serviceImpl.run_TaxonomyAbundance(
             self.ctx, {
                 'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': moss_amp_colAttrMap,
+                'amplicon_matrix_ref': moss_AmpMat,
+                'tax_field': 'taxonomy',
                 'threshold': 0.005,
                 'meta_group': '',
             })
 
+    @patch('TaxonomyAbundance.TaxonomyAbundanceImpl.DataFileUtil', new=lambda *a, **k: mock_dfu)
+    @patch('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: mock_kbr)
+    def test_no_col_attr_map(self):
         # without grouping
         ret = self.serviceImpl.run_TaxonomyAbundance(
             self.ctx, {
                 'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': None,
-                'threshold': 0.005,
-                'meta_group': 'Field name (informal classification)',
-            })
-
-        # without grouping
-        ret = self.serviceImpl.run_TaxonomyAbundance(
-            self.ctx, {
-                'workspace_name': self.wsName,
-                'amplicon_matrix_ref': moss_amp_AmpMat,
-                'attri_mapping_ref': None,
+                'amplicon_matrix_ref': Test_amp_mat,
+                'tax_field': 'parsed_user_taxonomy',
                 'threshold': 0.005,
                 'meta_group': '',
             })
 
-    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
-    def test_remote_data(self):
+    def test_unmocked(self):
         ret = self.serviceImpl.run_TaxonomyAbundance(
             self.ctx, {
                 'workspace_name': self.wsName,
-                'amplicon_matrix_ref': secret_wRDP_AmpMat,
-                'attri_mapping_ref': None,
+                'amplicon_matrix_ref': moss_AmpMat,
+                'tax_field': 'taxonomy',
                 'threshold': 0.005,
                 'meta_group': '',
             })
  
 
-    @patch_('TaxonomyAbundance.TaxonomyAbundanceImpl.KBaseReport', new=lambda *a, **k: get_mock_kbr())
-    def test_no_taxonomy(self):
-        with self.assertRaises(ObjectException) as cm:
-            ret = self.serviceImpl.run_TaxonomyAbundance(
-                self.ctx, {
-                    'workspace_name': self.wsName,
-                    'amplicon_matrix_ref': moss_amp_AmpMat,
-                    'attri_mapping_ref': moss_amp_colAttrMap,
-                    'threshold': 0.005,
-                    'meta_group': 'Field name (informal classification)',
-                })
-            logging.info(str(cm))
-
-
-run_tests = ['test']
-local_tests = ['test_local_data']
-CI_tests = ['test_remote_data']
-prod_tests = ['test_no_taxonomy']
-
-
-for key, value in TaxonomyAbundanceTest.__dict__.copy().items():
-    if type(key) == str and key.startswith('test') and callable(value):
-        if key not in run_tests:
-            delattr(TaxonomyAbundanceTest, key)
-            pass
