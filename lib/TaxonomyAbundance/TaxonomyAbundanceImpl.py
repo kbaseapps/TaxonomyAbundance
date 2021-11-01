@@ -78,9 +78,8 @@ class TaxonomyAbundance:
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
         html_link = run(amp_id=amplicon_matrix_ref,
-                    tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
-                    dfu=self.dfu, scratch=self.shared_folder)
-
+                        tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
+                        dfu=self.dfu, scratch=self.shared_folder)
 
         report_client = KBaseReport(self.callback_url, token=self.token)
         report_name = "TaxonomyAbundance_report_" + str(uuid.uuid4())
