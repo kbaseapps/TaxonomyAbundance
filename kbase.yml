@@ -8,8 +8,8 @@ service-language:
     python
 
 module-version:
-    0.0.1
+    1.0.0
 
 owners:
-    [james_verasoto,swwang,weise]
+    [james_verasoto,swwang,weise,tgu2]
 

@@ -28,9 +28,9 @@ class TaxonomyAbundance:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.1"
-    GIT_URL = ""
-    GIT_COMMIT_HASH = ""
+    VERSION = "1.0.0"
+    GIT_URL = "git@github.com:Tianhao-Gu/TaxonomyAbundance.git"
+    GIT_COMMIT_HASH = "f2539aa23d833b72d0178fbb0f516d1a7457747a"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -52,7 +52,11 @@ class TaxonomyAbundance:
     def run_TaxonomyAbundance(self, ctx, params):
         """
         This example function accepts any number of parameters and returns results in a KBaseReport
-        :param params: instance of mapping from String to unspecified object
+        :param params: instance of type "TaxonomyAbundanceInput" ->
+           structure: parameter "amplicon_matrix_ref" of String, parameter
+           "attri_mapping_ref" of String, parameter "threshold" of Double,
+           parameter "taxonomy_level" of Long, parameter "grouping_label" of
+           mapping from String to String
         :returns: instance of type "ReportResults" -> structure: parameter
            "report_name" of String, parameter "report_ref" of String
         """
@@ -74,9 +78,8 @@ class TaxonomyAbundance:
         xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
         html_link = run(amp_id=amplicon_matrix_ref,
-                    tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
-                    dfu=self.dfu, scratch=self.shared_folder)
-
+                        tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
+                        dfu=self.dfu, scratch=self.shared_folder)
 
         report_client = KBaseReport(self.callback_url, token=self.token)
         report_name = "TaxonomyAbundance_report_" + str(uuid.uuid4())
@@ -98,7 +101,7 @@ class TaxonomyAbundance:
             raise ValueError('Method run_TaxonomyAbundance return value ' +
                              'output is not type dict as required.')
         # return the results
-        return [report_info]
+        return [output]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

@@ -9,11 +9,15 @@ module TaxonomyAbundance {
     } ReportResults;
 
     typedef structure {
+        string workspace_name;
+        int workspace_id;
         string amplicon_matrix_ref;
         string attri_mapping_ref;
         float threshold;
         int taxonomy_level;
         mapping<string, string> grouping_label;
+        string meta_group;
+        string tax_field;
     } TaxonomyAbundanceInput;
 
     /*

@@ -22,6 +22,10 @@ moss_rowAttrMap ='59732/4/1' # row AttributeMapping
 
 Test_amp_mat = '88567/3/1'
 Test_amp_mat_row_attributes = '88567/2/1'
+
+# appdev
+moss_AmpMat = '44900/151/1'
+Test_amp_mat = '44900/151/1'
 ##################################
 ##################################
 
