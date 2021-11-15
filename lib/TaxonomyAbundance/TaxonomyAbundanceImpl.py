@@ -27,7 +27,7 @@ class TaxonomyAbundance:
     ######################################### noqa
     VERSION = "1.0.0"
     GIT_URL = "git@github.com:Tianhao-Gu/TaxonomyAbundance.git"
-    GIT_COMMIT_HASH = "f2539aa23d833b72d0178fbb0f516d1a7457747a"
+    GIT_COMMIT_HASH = "5bcceee1e5ce831c22f7e0a95c38798fe1ba523f"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -50,10 +50,14 @@ class TaxonomyAbundance:
         """
         This example function accepts any number of parameters and returns results in a KBaseReport
         :param params: instance of type "TaxonomyAbundanceInput" ->
-           structure: parameter "amplicon_matrix_ref" of String, parameter
-           "attri_mapping_ref" of String, parameter "threshold" of Double,
-           parameter "taxonomy_level" of Long, parameter "grouping_label" of
-           mapping from String to String
+           structure: parameter "workspace_name" of String, parameter
+           "workspace_id" of Long, parameter "amplicon_matrix_ref" of String,
+           parameter "attri_mapping_ref" of String, parameter
+           "associated_matrix_obj_ref" of String, parameter "threshold" of
+           Double, parameter "taxonomy_level" of Long, parameter
+           "grouping_label" of mapping from String to String, parameter
+           "meta_group" of String, parameter "tax_field" of String, parameter
+           "associated_matrix_row" of String, parameter "ascending" of Long
         :returns: instance of type "ReportResults" -> structure: parameter
            "report_name" of String, parameter "report_ref" of String
         """
@@ -68,13 +72,18 @@ class TaxonomyAbundance:
 
         amplicon_matrix_ref = params['amplicon_matrix_ref']
         tax_field = params['tax_field']
-        cutoff = params['threshold']
+        cutoff = params.get('threshold', 0.005)
         grouping_label = params.get('meta_group')
+        associated_matrix_row = params.get('associated_matrix_row')
+        associated_matrix_obj_ref = params.get('associated_matrix_obj_ref')
+        ascending = params.get('ascending', 1)
         self.dfu = DataFileUtil(self.callback_url)
 
         html_link = run(amp_id=amplicon_matrix_ref,
                         tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
-                        dfu=self.dfu, scratch=self.shared_folder)
+                        dfu=self.dfu, scratch=self.shared_folder,
+                        associated_matrix_obj_ref=associated_matrix_obj_ref,
+                        associated_matrix_row=associated_matrix_row, ascending=ascending)
 
         report_client = KBaseReport(self.callback_url, token=self.token)
         report_name = "TaxonomyAbundance_report_" + str(uuid.uuid4())

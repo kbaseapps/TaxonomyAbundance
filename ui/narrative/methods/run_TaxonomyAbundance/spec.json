@@ -1,6 +1,6 @@
 {
   "ver" : "",
-  "authors" : ["james_verasoto", "weise", "swwang"],
+  "authors" : ["james_verasoto", "weise", "swwang", "tgu2"],
   "contact" : "http://kbase.us/contact-us/",
   "visible" : true,
   "categories" : ["active","util"],
@@ -18,6 +18,49 @@
       "field_type" : "text",
       "text_options" : {
         "valid_ws_types" : ["KBaseMatrices.AmpliconMatrix"]
+      }
+    },
+    {
+      "id" : "associated_matrix_obj_ref",
+      "optional" : true,
+      "advanced" : true,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "text",
+      "text_options" : {
+        "valid_ws_types" : ["KBaseMatrices"]
+      }
+    },
+    {
+      "id": "tax_field",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [ "" ],
+      "field_type": "textsubdata",
+      "textsubdata_options": {
+        "subdata_selection": {
+           "parameter_id": "amplicon_matrix_ref",
+           "path_to_subdata": [
+               "row_attributemapping_ref",
+               "<WSREF>",
+               "attributes"
+           ],
+           "subdata_included": [
+               "attributes/[*]/attribute",
+               "attributes/[*]/source",
+               "row_attributemapping_ref"
+           ],
+           "selection_id": "attribute",
+           "selection_description": [
+               "attribute",
+               "source"
+           ],
+           "description_template": "source: {{source}}"
+        },
+        "multiselection": false,
+        "show_src_obj": true,
+        "allow_custom": false
       }
     },
     {
@@ -66,35 +109,34 @@
       }
     },
     {
-      "id": "tax_field",
-      "optional": false,
-      "advanced": false,
-      "allow_multiple": false,
-      "default_values": [ "" ],
-      "field_type": "textsubdata",
-      "textsubdata_options": {
+      "id" : "associated_matrix_row",
+      "optional" : true,
+      "advanced" : true,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "textsubdata",
+      "textsubdata_options" : {
         "subdata_selection": {
-           "parameter_id": "amplicon_matrix_ref",
-           "path_to_subdata": [
-               "row_attributemapping_ref",
-               "<WSREF>",
-               "attributes"
-           ],
-           "subdata_included": [
-               "attributes/[*]/attribute",
-               "attributes/[*]/source",
-               "row_attributemapping_ref"
-           ],
-           "selection_id": "attribute",
-           "selection_description": [
-               "attribute",
-               "source"
-           ],
-           "description_template": "source: {{source}}"
-        },
-        "multiselection": false,
-        "show_src_obj": true,
-        "allow_custom": false
+          "parameter_id" : "associated_matrix_obj_ref",
+          "subdata_included" : ["data/row_ids"],
+          "path_to_subdata": ["data", "row_ids"],
+          "selection_id": "id"
+          },
+        "multiselection":false,
+        "show_src_obj":false,
+        "allow_custom":false
+      }
+    },
+    {
+      "id": "ascending",
+      "optional":true,
+      "advanced":true,
+      "allow_multiple":false,
+      "default_values":["1"],
+      "field_type" : "checkbox",
+      "checkbox_options":{
+        "checked_value": 1,
+        "unchecked_value": 0
       }
     }
   ],
@@ -118,6 +160,11 @@
           "target_type_transform": "resolved-ref"
         },
         {
+          "input_parameter" : "associated_matrix_obj_ref",
+          "target_property" : "associated_matrix_obj_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
           "input_parameter" : "threshold",
           "target_property" : "threshold"
         },
@@ -128,6 +175,14 @@
         {
           "input_parameter": "tax_field",
           "target_property": "tax_field"
+        },
+        {
+          "input_parameter" : "associated_matrix_row",
+          "target_property" : "associated_matrix_row"
+        },
+        {
+          "input_parameter" : "ascending",
+          "target_property" : "ascending"
         }
       ],
       "output_mapping" : [

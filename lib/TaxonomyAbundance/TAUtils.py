@@ -8,6 +8,7 @@ import os
 import uuid
 import logging
 import itertools
+import copy
 
 from .debug import dprint
 
@@ -337,7 +338,8 @@ def get_id2taxonomy(attributes, instances, tax_field):
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
-def get_df(amp_data, tax_field, dfu):
+def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_matrix_row=None,
+           ascending=1):
     """
     Get Amplicon Matrix Data then make Pandas.DataFrame(),
     also get taxonomy data and add it to df, then transpose and return
@@ -352,9 +354,11 @@ def get_df(amp_data, tax_field, dfu):
     col_ids = amp_data['data']['col_ids']
     values = amp_data['data']['values']
     # Add 'taxonomy' column
-    col_ids.append('taxonomy')
+
+    df_col_ids = copy.deepcopy(col_ids)
+    df_col_ids.append('taxonomy')
     # Make pandas DataFrame
-    df = pd.DataFrame(index=row_ids, columns=col_ids)
+    df = pd.DataFrame(index=row_ids, columns=df_col_ids)
     for i in range(len(row_ids)):
         df.iloc[i, :-1] = values[i]
 
@@ -371,11 +375,40 @@ def get_df(amp_data, tax_field, dfu):
     # Add taxonomy data and transpose matrix
     for row_ind in df.index:
         df.loc[row_ind]['taxonomy'] = id2taxonomy[row_ind]
+
+    # order samples by associated matrix row data
+    if associated_matrix_row is not None:
+        logging.info('Start reordering matrix')
+        asso_matrix_obj = dfu.get_objects({
+            'object_refs': [associated_matrix_obj_ref]})['data'][0]['data']
+        asso_matrix_data = asso_matrix_obj['data']
+
+        asso_row_ids = asso_matrix_data['row_ids']
+        asso_col_ids = asso_matrix_data['col_ids']
+        asso_values = asso_matrix_data['values']
+
+        asso_matrix_df = pd.DataFrame(asso_values, index=asso_row_ids, columns=asso_col_ids)
+
+        try:
+            asso_matrix_df = asso_matrix_df[col_ids]
+        except KeyError as e:
+            err_msg = 'Some samples are not found in the associated matrix\n{}'.format(e)
+            raise ValueError(err_msg)
+
+        asso_matrix_df.sort_values(associated_matrix_row, axis=1, ascending=ascending,
+                                   inplace=True)
+
+        reordered_columns = copy.deepcopy(list(asso_matrix_df.columns))
+        reordered_columns.append('taxonomy')
+
+        df = df[reordered_columns]
+
     df = df.T
+
     return df
 
 
-def get_sample2group_df(col_attrmap_ref, category_name, dfu):
+def get_sample2group_df(col_attrmap_ref, category_name, dfu, order):
     """
     Metadata: make range(len()) index matrix with ID and Category columns
     :param col_attrmap_ref:
@@ -400,10 +433,10 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
     # Make pandas DataFrame
     sample2group_df = pd.DataFrame(index=range(len(metadata_samples)),
                                    columns=['ID', category_name])
-    i = 0
-    for key, val in meta_d.items():
-        sample2group_df.iloc[i] = [key, val[ind]]
-        i += 1
+
+    for idx, sample_name in enumerate(order[:-1]):
+        value = meta_d[sample_name][ind]
+        sample2group_df.iloc[idx] = [sample_name, value]
 
     dprint('sample2group_df', run=locals())
 
@@ -411,7 +444,8 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
 # End of KBase data retrieving methods ###
 
 
-def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch):
+def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matrix_obj_ref=None,
+        associated_matrix_row=None, ascending=1):
     """
     First method that is ran. Makes instance of GraphData class.
     Determines whether to get metadata or not.
@@ -428,12 +462,15 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch):
 
     matrix_obj = dfu.get_objects({'object_refs': [amp_id]})['data'][0]['data']
 
-    df = get_df(matrix_obj, tax_field, dfu)  # transpose of AmpMat df with taxonomy col appended
+    # transpose of AmpMat df with taxonomy col appended
+    df = get_df(matrix_obj, tax_field, dfu, associated_matrix_obj_ref=associated_matrix_obj_ref,
+                associated_matrix_row=associated_matrix_row, ascending=ascending)
     if grouping_label:
         sample2group_df = get_sample2group_df(
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
             category_name=grouping_label,
-            dfu=dfu)  # df of sample to group
+            dfu=dfu,
+            order=list(df.index))  # df of sample to group
     else:
         sample2group_df = None
     return GraphData(df=df, sample2group_df=sample2group_df,
