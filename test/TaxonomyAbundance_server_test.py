@@ -170,46 +170,52 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         print('Loaded AmpliconMatrix: ' + amplicon_matrix_ref)
 
         # load associated matrix
-        matrix_data = {'attributes': {'Instrument': 'Old Faithful',
-                                      'Scientist': 'Marie Currie'},
+        matrix_data = {'amplicon_type': '16S',
+                       'attributes': {'generated_by': 'QIIME revision XYZ'},
+                       'clustering_cutoff': 0.3,
+                       'clustering_method': 'clustering_method',
                        'col_attributemapping_ref': col_attributemapping_ref,
-                       'col_mapping': {'instance_1': 'instance_1',
-                                       'instance_2': 'instance_2',
-                                       'instance_3': 'instance_3',
-                                       'instance_4': 'instance_4'},
-                       'col_normalization': 'test_col_normalization',
-                       'data': {'col_ids': ['instance_1', 'instance_2', 'instance_3',
-                                            'instance_4'],
-                                'row_ids': ['WRI_RS00010_CDS_1', 'WRI_RS00015_CDS_1',
-                                            'WRI_RS00025_CDS_1', 'WRI_RS00030_CDS_1',
-                                            'WRI_RS00035_CDS_1'],
-                                'values': [[0.1, 0.2, 0.3, 0.4],
-                                           [0.5, 0.6, 0.7, 0.8],
-                                           [0.9, 1, 1.1, 1.2],
-                                           [0.9, 1, 1.1, 1.2],
-                                           [0.9, 1, 1.1, 1.2]]},
-                       'description': 'test_desc',
+                       'col_mapping': {'Sample1': 'Sample1',
+                                       'Sample2': 'Sample2',
+                                       'Sample3': 'Sample3',
+                                       'Sample4': 'Sample4',
+                                       'Sample5': 'Sample5',
+                                       'Sample6': 'Sample6'},
+                       'data': {'col_ids': ['Sample1', 'Sample2', 'Sample3', 'Sample4',
+                                            'Sample5', 'Sample6'],
+                                'row_ids': ['GG_OTU_1', 'GG_OTU_2', 'GG_OTU_3',
+                                            'GG_OTU_4', 'GG_OTU_5'],
+                                'values': [[0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                                           [5.0, 1.0, 0.0, 2.0, 3.0, 1.0],
+                                           [0.0, 0.0, 1.0, 4.0, 2.0, 0.0],
+                                           [2.0, 1.0, 1.0, 0.0, 0.0, 1.0],
+                                           [0.0, 1.0, 1.0, 0.0, 0.0, 0.0]]},
+                       'description': 'OTU data',
                        'row_attributemapping_ref': row_attributemapping_ref,
-                       'row_mapping': {'WRI_RS00010_CDS_1': 'WRI_RS00010_CDS_1',
-                                       'WRI_RS00015_CDS_1': 'WRI_RS00015_CDS_1',
-                                       'WRI_RS00025_CDS_1': 'WRI_RS00025_CDS_1',
-                                       'WRI_RS00030_CDS_1': 'WRI_RS00030_CDS_1',
-                                       'WRI_RS00035_CDS_1': 'WRI_RS00035_CDS_1'},
-                       'row_normalization': 'test_row_normalization',
-                       'scale': 'log2',
-                       'search_attributes': ['Scientist | Marie Currie',
-                                             'Instrument | Old Faithful']}
+                       'row_mapping': {'GG_OTU_1': 'GG_OTU_1',
+                                       'GG_OTU_2': 'GG_OTU_2',
+                                       'GG_OTU_3': 'GG_OTU_3',
+                                       'GG_OTU_4': 'GG_OTU_4',
+                                       'GG_OTU_5': 'GG_OTU_5'},
+                       'scale': 'raw',
+                       'search_attributes': ['generated_by|QIIME revision XYZ'],
+                       'sequencing_file_handle': 'KBH_670996',
+                       'sequencing_instrument': 'Illumina Genome Analyzer',
+                       'sequencing_technology': 'Illumina',
+                       'target_gene': '16S',
+                       'target_subfragment': ['V1'],
+                       'taxon_calling_method': ['clustering']}
 
         info = self.dfu.save_objects({
             'id': self.wsId,
-            'objects': [{'type': 'KBaseMatrices.ExpressionMatrix',
+            'objects': [{'type': 'KBaseMatrices.AmpliconMatrix',
                          'data': matrix_data,
-                         'name': 'test_associated_ExpressionMatrix'}]})[0]
+                         'name': 'test_associated_AmpliconMatrix'}]})[0]
 
         asso_matrix_ref = "%s/%s/%s" % (info[6], info[0], info[4])
 
         self.__class__.asso_matrix_ref = asso_matrix_ref
-        print('Loaded Associated ExpressionMatrix: ' + asso_matrix_ref)
+        print('Loaded Associated AmpliconMatrix: ' + asso_matrix_ref)
 
     def start_test(self):
         testname = inspect.stack()[1][3]
