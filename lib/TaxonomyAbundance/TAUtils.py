@@ -470,7 +470,7 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matr
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
             category_name=grouping_label,
             dfu=dfu,
-            order=list(df.columns))  # df of sample to group
+            order=list(df.index))  # df of sample to group
     else:
         sample2group_df = None
     return GraphData(df=df, sample2group_df=sample2group_df,
