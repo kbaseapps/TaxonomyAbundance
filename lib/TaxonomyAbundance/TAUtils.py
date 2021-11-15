@@ -398,7 +398,7 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
         asso_matrix_df.sort_values(associated_matrix_row, axis=1, ascending=ascending,
                                    inplace=True)
 
-        reordered_columns = copy.deepcopy(asso_matrix_df.columns.to_list())
+        reordered_columns = copy.deepcopy(list(asso_matrix_df.columns))
         reordered_columns.append('taxonomy')
 
         df = df[reordered_columns]
