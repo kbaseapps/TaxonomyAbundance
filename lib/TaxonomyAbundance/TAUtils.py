@@ -2,20 +2,18 @@ from plotly.offline import plot
 import plotly.graph_objs as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import plotly
 import pandas as pd
 import numpy as np
 import os
 import uuid
 import logging
 import itertools
-import re
 
 from .debug import dprint
 
 RANKS = ['Domain', 'Phylum', 'Class', 'Order', 'Family', 'Genus']
 
-# GraphData
+
 class GraphData:
 
     def __init__(self, df, sample2group_df, cutoff, scratch):
@@ -51,13 +49,12 @@ class GraphData:
         self.the_dict = {}
         self.compute_the_dict(cutoff)
 
-
     def compute_row_sums(self):
         row_sums = []
         for sample in self.df.index:
             try:
                 row_sums.append(pd.to_numeric(self.df.loc[sample]).sum())
-            except ValueError: # last row is taxonomies
+            except ValueError:  # last row is taxonomies
                 return np.array(row_sums)
         return np.array(row_sums)
 
@@ -74,14 +71,12 @@ class GraphData:
         logging.info('Pushing into main dictionary for level: {}'.format(level))
         tax2vals_d = dict()
 
-        for label, content in self.df.iteritems(): # iter through amplicon cols
+        for label, content in self.df.iteritems():  # iter through amplicon cols
             data = np.array(content[:-1], dtype=float)
             taxonomy = content[-1]
 
             taxonomy = ';'.join([
-                tax if tax != '' 
-                    else 'unclassified' 
-                    for tax in taxonomy.split(';')[:level+1]
+                tax if tax != '' else 'unclassified' for tax in taxonomy.split(';')[:level + 1]
             ])
 
             if taxonomy in tax2vals_d:
@@ -91,7 +86,6 @@ class GraphData:
 
         return tax2vals_d
 
-
     def percentize_cutoff_tax2vals_d(self, tax2vals_d, cutoff):
         """
         Changes tax2vals_d values to percentages based on sample_sums.
@@ -99,9 +93,10 @@ class GraphData:
         :param cutoff
         :return:
         """
-        logging.info('Calculating percentages and making Other category for cutoff: {}'.format(cutoff))
+        logging.info('Calculating percentages and making Other category for cutoff: {}'.format(
+            cutoff))
         # Averages by dividing array 'y' by array 'self.sample_sums'
-        tax2vals_d.update((x, y/self.sample_sums) for x, y in tax2vals_d.items())
+        tax2vals_d.update((x, y / self.sample_sums) for x, y in tax2vals_d.items())
 
         # Makes 'Other' category and deletes the elements that that went in there as to not repeat
         to_del = list()
@@ -118,7 +113,8 @@ class GraphData:
         if all(a == 0.0 for a in tax2vals_d['Other']):
             to_del.append('Other')
         else:
-            tax2vals_d['Other (num=%d, cutoff=%g)' % (other_count, cutoff)] = tax2vals_d.pop('Other')
+            tax2vals_d['Other (num=%d, cutoff=%g)' % (other_count, cutoff)] = tax2vals_d.pop(
+                'Other')
 
         for key in to_del:
             if key in tax2vals_d:
@@ -141,10 +137,11 @@ class GraphData:
 
     def make_grp2inds_d(self, category_field_name):
         """
-        returns a dictionary with keys being the different categories for grouping and values being lists of index
-        numbers, the numbers correlate to the location the sample has in self.samples. These lists of numbers will
-        be used to graph elements of the array values in tax2vals_d in the order of group. So like elements
-        pertaining to group1 are first then groups2.. etc.
+        returns a dictionary with keys being the different categories for grouping and values
+        being lists of index numbers, the numbers correlate to the location the sample has in
+        self.samples. These lists of numbers will be used to graph elements of the array values
+        in tax2vals_d in the order of group. So like elements pertaining to group1 are first then
+        groups2.. etc.
         :param category_field_name:
         :return: grp2inds_d
         """
@@ -169,23 +166,24 @@ class GraphData:
             grp2inds_d = {'': list(range(len(self.samples)))}
             num_grps = 1
         else:
-            grp2inds_d = self.make_grp2inds_d(category_field_name); dprint('grp2inds_d', run=locals(), where=True)
+            grp2inds_d = self.make_grp2inds_d(category_field_name)
+            dprint('grp2inds_d', run=locals(), where=True)
             num_grps = len(grp2inds_d)
 
         taxo_fig = make_subplots(
-            rows=1, 
+            rows=1,
             cols=num_grps,
             horizontal_spacing=0.05,
             x_title="Sample" + ("" if category_field_name else "<br>Grouped by: %s" % category_field_name),
             subplot_titles=list(grp2inds_d.keys()),
-            column_widths=[len(inds) for inds in grp2inds_d.values()], # TODO account for horizontal_space and bargap
+            column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
         )
-        
+
         start_rank = 'Class'
         start_level = 2
 
         for rank, tax2vals_d in self.the_dict.items():
-            color_iter = itertools.cycle(px.colors.qualitative.Alphabet) # TODO choose color
+            color_iter = itertools.cycle(px.colors.qualitative.Alphabet)  # TODO choose color
             for taxo_str, vals in tax2vals_d.items():
                 marker_color = next(color_iter)
                 for col, (grp, grp_inds) in zip(range(1, len(grp2inds_d) + 1), grp2inds_d.items()):
@@ -196,24 +194,24 @@ class GraphData:
                         plot_y.append(vals[i])
                     taxo_fig.add_trace(
                         go.Bar(
-                            name=taxo_str, 
-                            x=plot_x, 
-                            y=plot_y, 
+                            name=taxo_str,
+                            x=plot_x,
+                            y=plot_y,
                             hovertext=taxo_str,
                             legendgroup=taxo_str,
                             marker_color=marker_color,
                             showlegend=True if col == 1 else False,
                             visible=True if rank == start_rank else False,
-                        ), 
+                        ),
                         row=1,
                         col=col,
                     )
 
         taxo_fig.update_layout(
-            barmode='stack', 
+            barmode='stack',
             bargap=0.03,
             legend_traceorder='reversed',
-            title_text='Rank: %s' % start_rank, 
+            title_text='Rank: %s' % start_rank,
             title_y=0.94 if category_field_name else 0.97,
             title_x=0.5,
             title_yref='container',
@@ -221,13 +219,13 @@ class GraphData:
             yaxis_title='Proportion',
             yaxis_range=[0, 1],
             xaxis_tickangle=45,
-            margin=dict(b=115), # since xaxis title is annotation, needs to be lowered, liable to fall off
+            margin=dict(b=115),  # since xaxis title is annotation, needs to be lowered, liable to fall off
         )
-        
+
         # lower x_title
         taxo_fig.layout.annotations[-1].update(
             dict(
-                y=-0.05 if category_field_name else -0.04,      
+                y=-0.05 if category_field_name else -0.04,
             )
         )
 
@@ -243,9 +241,9 @@ class GraphData:
         dprint('num_grps', 'num_taxonomy', 'num_traces', run=locals(), json=False)
 
         dropdown_y = 1.05 if category_field_name else 1.10
-        
+
         def get_vis_mask(rank_ind, select):
-            '''For toggling trace visibilities when selecting rank'''
+            """For toggling trace visibilities when selecting rank"""
             mask = []
             for i in range(len(RANKS)):
                 if i != rank_ind:
@@ -253,7 +251,7 @@ class GraphData:
                 elif select == 'trace':
                     mask += [True] * num_traces[i]
                 elif select == 'legend':
-                    mask += ([True] + [False] * (num_grps-1)) * num_taxonomy[i]
+                    mask += ([True] + [False] * (num_grps - 1)) * num_taxonomy[i]
                 else:
                     raise Exception()
             return mask
@@ -262,16 +260,16 @@ class GraphData:
             dict(
                 args=[
                     {
-                        'visible': get_vis_mask(i, 'trace'), 
+                        'visible': get_vis_mask(i, 'trace'),
                         'showlegend': get_vis_mask(i, 'legend')
-                    }, 
+                    },
                     {
                         'title': 'Rank: %s' % rank
                     }
-                ], 
-                label=rank, 
+                ],
+                label=rank,
                 method='update'
-            ) 
+            )
             for i, rank in enumerate(RANKS)
         ]
 
@@ -322,21 +320,20 @@ class GraphData:
 
         plotly_html_flpth = os.path.join(self.run_dir, "plotly_bar.html")
         plot(taxo_fig, filename=plotly_html_flpth)
-        
+
         return {
             'path': plotly_html_flpth,
             'name': 'plotly_bar.html',
-        } 
+        }
 
 
-def get_id2taxonomy(attributes, instances, tax_field) -> dict:
+def get_id2taxonomy(attributes, instances, tax_field):
     for ind, d in enumerate(attributes):
         if d['attribute'] == tax_field:
             break
     #
     id2taxonomy = {id: instance[ind] for id, instance in instances.items()}
     return id2taxonomy
-
 
 
 # Methods that retrieve KBase data from Matrixs and Mappings ###
@@ -350,7 +347,7 @@ def get_df(amp_data, tax_field, dfu):
     """
     logging.info('Getting DataObject')
     # Amplicon data
-    
+
     row_ids = amp_data['data']['row_ids']
     col_ids = amp_data['data']['col_ids']
     values = amp_data['data']['values']
@@ -364,7 +361,7 @@ def get_df(amp_data, tax_field, dfu):
     # Get object
     test_row_attributes_permanent_id = amp_data['row_attributemapping_ref']
     obj = dfu.get_objects({'object_refs': [test_row_attributes_permanent_id]})
-    row_attrmap_name = obj['data'][0]['info'][1]
+    # row_attrmap_name = obj['data'][0]['info'][1]
     attributes = obj['data'][0]['data']['attributes']
     instances = obj['data'][0]['data']['instances']
 
@@ -401,7 +398,8 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
     # Set metadata_samples
     metadata_samples = meta_d.keys()
     # Make pandas DataFrame
-    sample2group_df = pd.DataFrame(index=range(len(metadata_samples)), columns=['ID', category_name])
+    sample2group_df = pd.DataFrame(index=range(len(metadata_samples)),
+                                   columns=['ID', category_name])
     i = 0
     for key, val in meta_d.items():
         sample2group_df.iloc[i] = [key, val[ind]]
@@ -415,7 +413,9 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
 
 def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch):
     """
-    First method that is ran. Makes instance of GraphData class. Determines whether to get metadata or not.
+    First method that is ran. Makes instance of GraphData class.
+    Determines whether to get metadata or not.
+
     :param amp_id:
     :param tax_field:
     :param cutoff:
@@ -432,8 +432,9 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch):
     if grouping_label:
         sample2group_df = get_sample2group_df(
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
-            category_name=grouping_label, 
+            category_name=grouping_label,
             dfu=dfu)  # df of sample to group
     else:
         sample2group_df = None
-    return GraphData(df=df, sample2group_df=sample2group_df, cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)
+    return GraphData(df=df, sample2group_df=sample2group_df,
+                     cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)

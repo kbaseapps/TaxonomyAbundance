@@ -4,11 +4,8 @@ import logging
 import os
 import uuid
 from TaxonomyAbundance.TAUtils import run
-
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.DataFileUtilClient import DataFileUtil
-
-from .debug import dprint
 
 #END_HEADER
 
@@ -64,18 +61,16 @@ class TaxonomyAbundance:
         # return variables are: output
         #BEGIN run_TaxonomyAbundance
 
-        logging.info(params)
+        logging.info('start run_TaxonomyAbundance with:\n{}'.format(params))
 
         # extract params
         # do some transformations against narrative ui
+
         amplicon_matrix_ref = params['amplicon_matrix_ref']
         tax_field = params['tax_field']
         cutoff = params['threshold']
         grouping_label = params.get('meta_group')
         self.dfu = DataFileUtil(self.callback_url)
-
-        csv_fp = "/kb/module/data/smalltx.csv"
-        xls_fp = "/kb/module/data/moss_f50_metadata.xls"
 
         html_link = run(amp_id=amplicon_matrix_ref,
                         tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
