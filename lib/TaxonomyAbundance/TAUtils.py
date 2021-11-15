@@ -408,7 +408,7 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
     return df
 
 
-def get_sample2group_df(col_attrmap_ref, category_name, dfu):
+def get_sample2group_df(col_attrmap_ref, category_name, dfu, order):
     """
     Metadata: make range(len()) index matrix with ID and Category columns
     :param col_attrmap_ref:
@@ -433,10 +433,10 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu):
     # Make pandas DataFrame
     sample2group_df = pd.DataFrame(index=range(len(metadata_samples)),
                                    columns=['ID', category_name])
-    i = 0
-    for key, val in meta_d.items():
-        sample2group_df.iloc[i] = [key, val[ind]]
-        i += 1
+
+    for idx, sample_name in enumerate(order[:-1]):
+        value = meta_d[sample_name][ind]
+        sample2group_df.iloc[idx] = [sample_name, value]
 
     dprint('sample2group_df', run=locals())
 
@@ -469,7 +469,8 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matr
         sample2group_df = get_sample2group_df(
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
             category_name=grouping_label,
-            dfu=dfu)  # df of sample to group
+            dfu=dfu,
+            order=list(df.columns))  # df of sample to group
     else:
         sample2group_df = None
     return GraphData(df=df, sample2group_df=sample2group_df,
