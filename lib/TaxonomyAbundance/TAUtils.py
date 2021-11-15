@@ -464,7 +464,7 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matr
 
     # transpose of AmpMat df with taxonomy col appended
     df = get_df(matrix_obj, tax_field, dfu, associated_matrix_obj_ref=associated_matrix_obj_ref,
-                associated_matrix_row=associated_matrix_row, ascending=1)
+                associated_matrix_row=associated_matrix_row, ascending=ascending)
     if grouping_label:
         sample2group_df = get_sample2group_df(
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
