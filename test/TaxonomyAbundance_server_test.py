@@ -221,10 +221,23 @@ class TaxonomyAbundanceTest(unittest.TestCase):
         testname = inspect.stack()[1][3]
         print('\n*** starting test: ' + testname + ' **')
 
-    def test_grouping(self):
+    def test_TaxonomyAbundance(self):
         self.start_test()
         self.loadMatrix()
 
+        # test only taxonomy
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': self.amplicon_matrix_ref,
+                'tax_field': 'taxonomy',
+                'threshold': 0.005,
+            })[0]
+
+        self.assertTrue('report_ref' in ret)
+        self.assertTrue('report_name' in ret)
+
+        # test with grouping
         ret = self.serviceImpl.run_TaxonomyAbundance(
             self.ctx, {
                 'workspace_name': self.wsName,
@@ -232,6 +245,22 @@ class TaxonomyAbundanceTest(unittest.TestCase):
                 'tax_field': 'taxonomy',
                 'threshold': 0.005,
                 'meta_group': 'BODY_SITE',
+            })[0]
+
+        self.assertTrue('report_ref' in ret)
+        self.assertTrue('report_name' in ret)
+
+        # test with ordering
+        ret = self.serviceImpl.run_TaxonomyAbundance(
+            self.ctx, {
+                'workspace_name': self.wsName,
+                'amplicon_matrix_ref': self.amplicon_matrix_ref,
+                'tax_field': 'taxonomy',
+                'threshold': 0.005,
+                'meta_group': 'BODY_SITE',
+                'associated_matrix_obj_ref': self.asso_matrix_ref,
+                'associated_matrix_row': 'GG_OTU_2',
+                'ascending': 0
             })[0]
 
         self.assertTrue('report_ref' in ret)

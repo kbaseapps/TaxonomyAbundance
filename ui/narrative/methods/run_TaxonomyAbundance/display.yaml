@@ -8,7 +8,7 @@ tooltip: |
 
 screenshots: []
 
-icon: icon.png
+icon: analysis.png
 
 #
 # define a set of similar apps that might be useful to the user
@@ -32,6 +32,14 @@ parameters :
         long-hint  : |
             AmpliconMatrix with raw count data
 
+    associated_matrix_obj_ref:
+        ui-name: |
+            Associated Matrix Object
+        short-hint: |
+            Associated Matrix object used to order result barplot
+        long-hint: |
+            Associated Matrix object used to order result barplot
+
     threshold:
         ui-name: |
             Cutoff
@@ -40,18 +48,36 @@ parameters :
         long-hint: |
             The relative abundance threshold below which taxa will be pooled into the `Other` category.
 
-    meta_group:
-        ui-name: |
-            Column attribute or sample metadata<br>to group samples by
-        short-hint: |
-            Bars will be plotted grouped by sample data in specified column. 
-        long-hint: |
-            Bars will be plotted grouped by sample data in specified column.
     tax_field:
         ui-name: |
             Taxonomy field
         short-hint: |
             Taxonomy field
+
+    meta_group:
+        ui-name: |
+            Column attribute or sample metadata<br>to group samples by
+        short-hint: |
+            Bars will be plotted grouped by sample data in specified column.
+        long-hint: |
+            Bars will be plotted grouped by sample data in specified column.
+
+    associated_matrix_row:
+        ui-name: |
+            Associated Matrix Row
+        short-hint: |
+            Select a row from associated matrix for plot order
+        long-hint: |
+            Select a row from associated matrix for plot order
+
+    ascending:
+        ui-name: |
+            Sort Ascending
+        short-hint: |
+            Sort ascending vs. descending
+        long-hint: |
+            Sort ascending vs. descending
+
 
 description : |
     <h3>Description: </h3>

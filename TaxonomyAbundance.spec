@@ -13,11 +13,14 @@ module TaxonomyAbundance {
         int workspace_id;
         string amplicon_matrix_ref;
         string attri_mapping_ref;
+        string associated_matrix_obj_ref;
         float threshold;
         int taxonomy_level;
         mapping<string, string> grouping_label;
         string meta_group;
         string tax_field;
+        string associated_matrix_row;
+        int ascending;
     } TaxonomyAbundanceInput;
 
     /*
