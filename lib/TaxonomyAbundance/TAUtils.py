@@ -36,13 +36,10 @@ class GraphData:
 
         # Sample list #
         self.samples = list(self.df.index)[:-1]
-
         # Get sample_sums #
-        self.sample_sums = self.compute_row_sums()
+        self.sample_sums = self.compute_row_sums(df)
         # Set total_sum of entire Matrix #
-        self.total_sum = 0
-        for i in range(len(self.sample_sums)):
-            self.total_sum += self.sample_sums[i]
+        self.total_sum = self.sample_sums.sum()
 
         # METADATA #
 
@@ -50,13 +47,11 @@ class GraphData:
         self.the_dict = {}
         self.compute_the_dict(cutoff)
 
-    def compute_row_sums(self):
+    def compute_row_sums(self, df):
         row_sums = []
-        for sample in self.df.index:
-            try:
-                row_sums.append(pd.to_numeric(self.df.loc[sample]).sum())
-            except ValueError:  # last row is taxonomies
-                return np.array(row_sums)
+        for sample in df.index[:-1]:  # last row is taxonomies
+            row_sums.append(pd.to_numeric(df.loc[sample]).sum())
+
         return np.array(row_sums)
 
     def get_tax2vals_d(self, level):
@@ -175,7 +170,7 @@ class GraphData:
             rows=1,
             cols=num_grps,
             horizontal_spacing=0.05,
-            x_title="Sample" + ("" if category_field_name else "<br>Grouped by: %s" % category_field_name),
+            x_title="Sample" + ("" if not category_field_name else "<br>Grouped by: %s" % category_field_name),
             subplot_titles=list(grp2inds_d.keys()),
             column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
         )
