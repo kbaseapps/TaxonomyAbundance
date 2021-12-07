@@ -424,9 +424,9 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu, order):
             ind = i
             break
     # Set metadata_samples
-    metadata_samples = meta_d.keys()
+    # metadata_samples = meta_d.keys()
     # Make pandas DataFrame
-    sample2group_df = pd.DataFrame(index=range(len(metadata_samples)),
+    sample2group_df = pd.DataFrame(index=range(len(order[:-1])),
                                    columns=['ID', category_name])
 
     for idx, sample_name in enumerate(order[:-1]):
