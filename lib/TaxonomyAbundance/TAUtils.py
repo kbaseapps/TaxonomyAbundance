@@ -372,7 +372,7 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
         df.loc[row_ind]['taxonomy'] = id2taxonomy[row_ind]
 
     # order samples by associated matrix row data
-    if associated_matrix_row is not None:
+    if associated_matrix_row:
         logging.info('Start reordering matrix')
         asso_matrix_obj = dfu.get_objects({
             'object_refs': [associated_matrix_obj_ref]})['data'][0]['data']
