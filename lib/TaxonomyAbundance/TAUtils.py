@@ -169,7 +169,8 @@ class GraphData:
         taxo_fig = make_subplots(
             rows=1,
             cols=num_grps,
-            horizontal_spacing=0.05,
+            # horizontal_spacing=0.05,
+            facet_row_spacing=0.05,
             x_title="Sample" + ("" if not category_field_name else "<br>Grouped by: %s" % category_field_name),
             subplot_titles=list(grp2inds_d.keys()),
             column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
