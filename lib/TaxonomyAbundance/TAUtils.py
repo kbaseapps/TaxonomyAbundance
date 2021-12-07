@@ -166,14 +166,23 @@ class GraphData:
             dprint('grp2inds_d', run=locals(), where=True)
             num_grps = len(grp2inds_d)
 
-        taxo_fig = make_subplots(
-            rows=1,
-            cols=num_grps,
-            horizontal_spacing=0.05,
-            x_title="Sample" + ("" if not category_field_name else "<br>Grouped by: %s" % category_field_name),
-            subplot_titles=list(grp2inds_d.keys()),
-            column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
-        )
+        try:
+            taxo_fig = make_subplots(
+                rows=1,
+                cols=num_grps,
+                horizontal_spacing=0.05,
+                x_title="Sample" + ("" if not category_field_name else "<br>Grouped by: %s" % category_field_name),
+                subplot_titles=list(grp2inds_d.keys()),
+                column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
+            )
+        except Exception:
+            taxo_fig = make_subplots(
+                rows=1,
+                cols=num_grps,
+                x_title="Sample" + ("" if not category_field_name else "<br>Grouped by: %s" % category_field_name),
+                subplot_titles=list(grp2inds_d.keys()),
+                column_widths=[len(inds) for inds in grp2inds_d.values()],  # TODO account for horizontal_space and bargap
+            )
 
         start_rank = 'Class'
         start_level = 2
@@ -423,10 +432,9 @@ def get_sample2group_df(col_attrmap_ref, category_name, dfu, order):
         if attr_l[i]['attribute'] == category_name:
             ind = i
             break
-    # Set metadata_samples
-    metadata_samples = meta_d.keys()
+
     # Make pandas DataFrame
-    sample2group_df = pd.DataFrame(index=range(len(metadata_samples)),
+    sample2group_df = pd.DataFrame(index=range(len(order[:-1])),
                                    columns=['ID', category_name])
 
     for idx, sample_name in enumerate(order[:-1]):
