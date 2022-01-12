@@ -93,7 +93,7 @@ class TaxonomyAbundance:
             'direct_html_link_index': 0,
             'html_links': [html_link],
             'report_object_name': report_name,
-            'warnings': warnning,
+            'warnings': [warnning],
             'workspace_name': params['workspace_name']
         })
         output = {
