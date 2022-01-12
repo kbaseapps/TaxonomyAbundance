@@ -353,7 +353,6 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
     """
     logging.info('Getting DataObject')
     # Amplicon data
-
     row_ids = amp_data['data']['row_ids']
     col_ids = amp_data['data']['col_ids']
     values = amp_data['data']['values']
@@ -381,6 +380,7 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
         df.loc[row_ind]['taxonomy'] = id2taxonomy[row_ind]
 
     # order samples by associated matrix row data
+    warnning = ''
     if associated_matrix_row:
         logging.info('Start reordering matrix')
         asso_matrix_obj = dfu.get_objects({
@@ -396,8 +396,13 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
         try:
             asso_matrix_df = asso_matrix_df[col_ids]
         except KeyError as e:
-            err_msg = 'Some samples are not found in the associated matrix\n{}'.format(e)
-            raise ValueError(err_msg)
+            warnning = 'Some observations are not plotted '
+            warnning += 'because they are not found in the associated matrix.'
+            err_msg = '{}\n{}'.format(warnning, e)
+            logging.warning(err_msg)
+
+            shared_col = list(set(col_ids) & set(asso_col_ids))
+            asso_matrix_df = asso_matrix_df[shared_col]
 
         asso_matrix_df.sort_values(associated_matrix_row, axis=1, ascending=ascending,
                                    inplace=True)
@@ -409,7 +414,7 @@ def get_df(amp_data, tax_field, dfu, associated_matrix_obj_ref=None, associated_
 
     df = df.T
 
-    return df
+    return df, warnning
 
 
 def get_sample2group_df(col_attrmap_ref, category_name, dfu, order):
@@ -466,8 +471,10 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matr
     matrix_obj = dfu.get_objects({'object_refs': [amp_id]})['data'][0]['data']
 
     # transpose of AmpMat df with taxonomy col appended
-    df = get_df(matrix_obj, tax_field, dfu, associated_matrix_obj_ref=associated_matrix_obj_ref,
-                associated_matrix_row=associated_matrix_row, ascending=ascending)
+    df, warnning = get_df(matrix_obj, tax_field, dfu,
+                          associated_matrix_obj_ref=associated_matrix_obj_ref,
+                          associated_matrix_row=associated_matrix_row,
+                          ascending=ascending)
     if grouping_label:
         sample2group_df = get_sample2group_df(
             col_attrmap_ref=matrix_obj.get('col_attributemapping_ref'),
@@ -476,5 +483,7 @@ def run(amp_id, tax_field, grouping_label, cutoff, dfu, scratch, associated_matr
             order=list(df.index))  # df of sample to group
     else:
         sample2group_df = None
-    return GraphData(df=df, sample2group_df=sample2group_df,
-                     cutoff=cutoff, scratch=scratch).graph(category_field_name=grouping_label)
+    return GraphData(df=df,
+                     sample2group_df=sample2group_df,
+                     cutoff=cutoff,
+                     scratch=scratch).graph(category_field_name=grouping_label), warnning

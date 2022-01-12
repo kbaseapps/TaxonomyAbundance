@@ -79,11 +79,13 @@ class TaxonomyAbundance:
         ascending = params.get('ascending', 1)
         self.dfu = DataFileUtil(self.callback_url)
 
-        html_link = run(amp_id=amplicon_matrix_ref,
-                        tax_field=tax_field, cutoff=cutoff, grouping_label=grouping_label,
-                        dfu=self.dfu, scratch=self.shared_folder,
-                        associated_matrix_obj_ref=associated_matrix_obj_ref,
-                        associated_matrix_row=associated_matrix_row, ascending=ascending)
+        html_link, warnning = run(amp_id=amplicon_matrix_ref,
+                                  tax_field=tax_field, cutoff=cutoff,
+                                  grouping_label=grouping_label,
+                                  dfu=self.dfu, scratch=self.shared_folder,
+                                  associated_matrix_obj_ref=associated_matrix_obj_ref,
+                                  associated_matrix_row=associated_matrix_row,
+                                  ascending=ascending)
 
         report_client = KBaseReport(self.callback_url, token=self.token)
         report_name = "TaxonomyAbundance_report_" + str(uuid.uuid4())
@@ -91,6 +93,7 @@ class TaxonomyAbundance:
             'direct_html_link_index': 0,
             'html_links': [html_link],
             'report_object_name': report_name,
+            'warnings': warnning,
             'workspace_name': params['workspace_name']
         })
         output = {
